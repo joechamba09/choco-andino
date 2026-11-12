@@ -1,0 +1,141 @@
+---
+// src/components/Hero.astro
+// Sección de portada Hero con carrusel, títulos y tarjetas de acceso rápido
+---
+
+<section class="cho-hero relative w-full h-[88vh] min-h-[820px] md:min-h-[720px] overflow-hidden flex items-center justify-center border-b border-emerald-900/20 z-10">
+  
+  {/* Carrusel de Imágenes de Alta Calidad */}
+  <div id="heroCarousel" class="absolute inset-0 w-full h-full z-0">
+    <div class="hero-slide absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out">
+      <img src="https://imagenes.expreso.ec/files/og_thumbnail/uploads/2026/01/30/697cf9ae35026.jpeg" alt="Chocó Andino Bosque Nublado" class="w-full h-full object-cover filter brightness-95 scale-100 hover:scale-105 transition-transform duration-10000" />
+    </div>
+    <div class="hero-slide absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 ease-in-out">
+      <img src="https://cdn.prod.website-files.com/6840789c1c4b98172da6c67a/6846f84f436a5c565e660b74_choco-andino.jpg" alt="Chocó Andino Reserva de Biosfera" class="w-full h-full object-cover filter brightness-95" />
+    </div>
+    <div class="hero-slide absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 ease-in-out">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRY1zmmgfy3thUA175o6QtLIuRQL3Shva2Bkl2tuuJM7pWNZacYAob8SqhL&s=10" alt="Biodiversidad Chocó Andino" class="w-full h-full object-cover filter brightness-95" />
+    </div>
+  </div>
+
+  {/* Degradado para máxima legibilidad */}
+  <div class="absolute inset-0 bg-gradient-to-t from-[#07170e]/95 via-[#0b2416]/65 to-[#07170e]/40 z-10 pointer-events-none"></div>
+  <div class="cho-hero-tint absolute inset-0 z-[11] pointer-events-none"></div>
+  <div class="cho-hero-glow absolute inset-0 z-[11] pointer-events-none"></div>
+
+  {/* Silueta de Cordillera y Bosque en la base del Hero */}
+  <div class="absolute inset-x-0 bottom-0 h-32 md:h-44 xl:h-56 z-[15] pointer-events-none" aria-hidden="true">
+    <svg class="w-full h-full" viewBox="0 0 1440 180" preserveAspectRatio="xMidYMax slice">
+      <path fill="#8fb39b" opacity=".38" d="M0 180V110L120 70 220 105 360 45 500 100 650 55 800 105 950 60 1100 100 1250 50 1440 95V180Z" />
+      <path fill="#3f7a5a" opacity=".55" d="M0 180V135C120 100 220 150 380 110S640 140 780 105 1060 150 1200 115 1380 125 1440 120V180Z" />
+      <path fill="#1e4d36" opacity=".78" d="M0 180V150 L14 108 L28 148 L42 110 L56 156 L70 99 L84 147 L98 124 L112 154 L126 101 L140 151 L154 116 L168 146 L182 127 L196 154 L210 104 L224 146 L238 100 L252 152 L266 111 L280 147 L294 105 L308 147 L322 115 L336 152 L350 99 L364 155 L378 101 L392 149 L406 118 L420 156 L434 116 L448 146 L462 116 L476 155 L490 110 L504 146 L518 105 L532 146 L546 115 L560 148 L574 107 L588 152 L602 102 L616 154 L630 101 L644 155 L658 107 L672 154 L686 124 L700 156 L714 103 L728 147 L742 116 L756 155 L770 118 L784 149 L798 109 L812 147 L826 115 L840 147 L854 116 L868 146 L882 117 L896 149 L910 113 L924 156 L938 115 L952 152 L966 122 L980 151 L994 112 L1008 155 L1022 127 L1036 153 L1050 109 L1064 150 L1078 105 L1092 148 L1106 120 L1120 149 L1134 100 L1148 155 L1162 107 L1176 154 L1190 113 L1204 151 L1218 121 L1232 153 L1246 107 L1260 155 L1274 100 L1288 147 L1302 114 L1316 152 L1330 103 L1344 151 L1358 102 L1372 153 L1386 111 L1400 146 L1414 128 L1428 156 L1442 100 L1456 154 L1440 150V180Z" />
+    </svg>
+  </div>
+
+  {/* Indicador lateral para explorar */}
+  <a href="#catalogo" class="cho-scroll absolute left-6 xl:left-10 bottom-36 z-20 hidden lg:flex flex-col items-center gap-3 text-[#f4efe0] text-xs font-semibold" aria-label="Explorar el catálogo de biodiversidad">
+    <span class="tracking-widest" style="writing-mode: vertical-rl;">Explora</span>
+    <span class="cho-scroll-line"></span>
+  </a>
+
+  {/* Contenido Central del Hero */}
+  <div class="relative z-20 text-center max-w-4xl mx-auto px-6 space-y-4 pb-64 md:pb-28">
+    <span style="--d:.05s" class="cho-in inline-flex items-center gap-2 bg-emerald-950/90 text-emerald-100 text-xs font-black px-5 py-2.5 rounded-full border border-[var(--color-accent,#d4a63a)]/80 uppercase tracking-widest shadow-2xl backdrop-blur-md">
+      <svg class="w-4 h-4 text-[var(--color-accent,#d4a63a)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c2 2 2.6 3.5 3.7 9.2A7 7 0 0 1 11 20z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/><path d="M12 11c-2 2-3 4-3 6"/></svg> 
+      <span>Reserva de la Biosfera UNESCO</span>
+      <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-accent,#d4a63a)] animate-pulse"></span>
+      <span>Chocó Andino</span>
+    </span>
+    
+    <h1 class="cho-title text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white drop-shadow-2xl">
+      <span class="cho-title-top cho-in" style="--d:.15s">SANTUARIO NATURAL DE PICHINCHA</span>
+      <span class="cho-title-main cho-in text-[var(--color-accent,#d4a63a)]" style="--d:.3s">VIVE NUESTRA BIODIVERSIDAD</span>
+    </h1>
+
+    {/* Divisor ornamental */}
+    <div class="cho-in flex items-center justify-center gap-3 text-[var(--color-accent,#d4a63a)] py-0.5" style="--d:.45s" aria-hidden="true">
+      <span class="cho-rule"></span>
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20"/><path d="m20 7 2 .5-2 .5"/><path d="M10 18v3"/><path d="M14 17.75V21"/><path d="M7 18a6 6 0 0 0 3.84-10.61"/></svg>
+      <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c2 2 2.6 3.5 3.7 9.2A7 7 0 0 1 11 20z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/><path d="M12 11c-2 2-3 4-3 6"/></svg>
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 1 1 4.5 4.5 4.5 4.5 0 1 1-4.5 4.5"/></svg>
+      <span class="cho-rule"></span>
+    </div>
+
+    <p style="--d:.55s" class="cho-sub cho-in text-base sm:text-lg md:text-xl text-zinc-100 font-medium drop-shadow-md max-w-2xl mx-auto leading-relaxed">
+      Descubre las 40 especies emblemáticas y el tesoro natural vivo del noroccidente de Pichincha
+    </p>
+
+    {/* Frase inspiradora */}
+    <div style="--d:.65s" class="cho-in max-w-2xl mx-auto bg-black/45 backdrop-blur-md border border-[var(--color-accent,#d4a63a)]/40 px-5 py-2.5 rounded-2xl shadow-xl flex items-center justify-center gap-2.5 text-xs sm:text-sm text-emerald-100 font-medium">
+      <span class="text-base text-[var(--color-accent,#d4a63a)] font-serif select-none">❝</span>
+      <p class="italic text-center">Conocer nuestra biodiversidad es el primer paso para protegerla y convivir en armonía con la naturaleza.</p>
+      <span class="text-base text-[var(--color-accent,#d4a63a)] font-serif select-none">❞</span>
+    </div>
+
+    {/* Botones de acción directa */}
+    <div style="--d:.75s" class="cho-in flex flex-wrap items-center justify-center gap-3 pt-2">
+      <a 
+        href="#catalogo" 
+        class="cho-btn bg-[var(--color-secondary,#2e7d52)] hover:bg-emerald-600 text-white font-black px-6 py-3.5 rounded-2xl text-xs sm:text-sm shadow-xl flex items-center gap-2 border border-emerald-400/40"
+      >
+        <svg class="w-4 h-4 text-emerald-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c2 2 2.6 3.5 3.7 9.2A7 7 0 0 1 11 20z"/></svg>
+        Explorar Catálogo (40 Especies)
+        <span class="text-[var(--color-accent,#d4a63a)]">&rarr;</span>
+      </a>
+      <button 
+        type="button"
+        class="js-open-aprende cho-btn bg-black/55 hover:bg-black/75 text-emerald-100 hover:text-white font-bold px-6 py-3.5 rounded-2xl text-xs sm:text-sm shadow-xl flex items-center gap-2 border border-emerald-500/40 backdrop-blur-md cursor-pointer"
+      >
+        <svg class="w-4 h-4 text-[var(--color-accent,#d4a63a)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 2.9 11 6.7a2 2 0 0 0 1.3 1.3l3.8 1.1-3.8 1.1a2 2 0 0 0-1.3 1.3l-1.1 3.8-1.1-3.8a2 2 0 0 0-1.3-1.3L3.7 9.1 7.5 8a2 2 0 0 0 1.3-1.3z"/></svg>
+        Preguntar al Asistente IA
+      </button>
+    </div>
+  </div>
+
+  {/* Tarjetas de acceso rápido en la base del hero (Educativas y Limpias) */}
+  <div class="absolute bottom-6 z-20 w-full max-w-5xl px-6 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+    
+    {/* Tarjeta 1: Catálogo Científico */}
+    <a href="#catalogo" class="cho-hero-btn min-h-[64px] cho-card bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-emerald-100 hover:border-[var(--color-secondary,#2e7d52)] hover:shadow-lg transition-all text-zinc-900 flex items-center justify-between group shadow-xl">
+      <div class="flex items-center gap-3.5">
+        <div class="p-2.5 rounded-xl bg-emerald-100 text-[var(--color-primary,#1e4d36)] group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+        </div>
+        <div>
+          <span class="block text-[10px] uppercase tracking-widest text-[var(--color-secondary,#2e7d52)] font-bold">Catálogo</span>
+          <span class="text-xs font-black tracking-wide text-zinc-900">COLECCIÓN DE 40 ESPECIES</span>
+        </div>
+      </div>
+      <span class="w-7 h-7 rounded-full bg-zinc-100 flex items-center justify-center text-xs text-zinc-600 group-hover:bg-[var(--color-secondary,#2e7d52)] group-hover:text-white transition-colors">&gt;</span>
+    </a>
+
+    {/* Tarjeta 2: Asistente Interactivo IA */}
+    <button id="cardAprendeBtn" class="cho-hero-btn min-h-[64px] cho-card bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-emerald-100 hover:border-[var(--color-secondary,#2e7d52)] hover:shadow-lg transition-all text-zinc-900 flex items-center justify-between group text-left cursor-pointer shadow-xl">
+      <div class="flex items-center gap-3.5">
+        <div class="p-2.5 rounded-xl bg-emerald-100 text-[var(--color-primary,#1e4d36)] group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+        </div>
+        <div>
+          <span class="block text-[10px] uppercase tracking-widest text-[var(--color-secondary,#2e7d52)] font-bold">Aprende</span>
+          <span class="text-xs font-black tracking-wide text-zinc-900">ASISTENTE INTERACTIVO IA</span>
+        </div>
+      </div>
+      <span class="w-7 h-7 rounded-full bg-zinc-100 flex items-center justify-center text-xs text-zinc-600 group-hover:bg-[var(--color-secondary,#2e7d52)] group-hover:text-white transition-colors">&gt;</span>
+    </button>
+
+    {/* Tarjeta 3: Mapas Bioclimáticos y Distribución (Reemplaza opción no educativa de Servicios/Turismo) */}
+    <a href="#catalogo" class="cho-hero-btn min-h-[64px] cho-card bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-emerald-100 hover:border-[var(--color-secondary,#2e7d52)] hover:shadow-lg transition-all text-zinc-900 flex items-center justify-between group shadow-xl">
+      <div class="flex items-center gap-3.5">
+        <div class="p-2.5 rounded-xl bg-emerald-100 text-[var(--color-primary,#1e4d36)] group-hover:scale-110 transition-transform">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/><path d="M2 12h20"/></svg>
+        </div>
+        <div>
+          <span class="block text-[10px] uppercase tracking-widest text-[var(--color-secondary,#2e7d52)] font-bold">Distribución</span>
+          <span class="text-xs font-black tracking-wide text-zinc-900">MAPAS Y NICHOS ECOLÓGICOS</span>
+        </div>
+      </div>
+      <span class="w-7 h-7 rounded-full bg-zinc-100 flex items-center justify-center text-xs text-zinc-600 group-hover:bg-[var(--color-secondary,#2e7d52)] group-hover:text-white transition-colors">&gt;</span>
+    </a>
+
+  </div>
+</section>

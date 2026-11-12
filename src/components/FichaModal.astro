@@ -1,0 +1,114 @@
+---
+// src/components/FichaModal.astro
+// Modal de previsualización rápida de especie al hacer clic en su tarjeta
+const ic = {
+  leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c2 2 2.6 3.5 3.7 9.2A7 7 0 0 1 11 20z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/><path d="M12 11c-2 2-3 4-3 6"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  mountain: '<path d="m8 3 4 8 5-5 5 15H2L8 3z"/>'
+};
+---
+
+<!-- FICHA MODAL RÁPIDA DE ESPECIE -->
+<div 
+  id="fichaModal" 
+  class="cho-ficha fixed inset-0 z-[60] items-center justify-center p-3 sm:p-6 bg-[#0c1f16]/75 backdrop-blur-md" 
+  role="dialog" 
+  aria-modal="true" 
+  aria-labelledby="fichaNombre" 
+  aria-hidden="true"
+>
+  <div class="cho-ficha-panel relative w-full max-w-4xl max-h-[92vh] md:h-[640px] overflow-y-auto md:overflow-hidden rounded-[32px] bg-[var(--color-background,#faf6ea)] shadow-2xl grid grid-cols-1 md:grid-cols-2 border border-[var(--color-sage,#8fb39b)]/50">
+
+    {/* Botón de cierre en esquina superior */}
+    <button 
+      id="fichaClose" 
+      type="button" 
+      aria-label="Cerrar ficha" 
+      class="cho-btn absolute top-3 right-3 z-30 w-11 h-11 rounded-full bg-white/95 text-[var(--color-deep,#14301f)] border border-[var(--color-sage,#8fb39b)]/60 shadow-lg flex items-center justify-center hover:bg-[var(--color-accent-soft,#f6e7b8)] cursor-pointer"
+    >
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+
+    {/* Fotografía de la especie */}
+    <div class="relative h-60 sm:h-72 md:h-full bg-[var(--color-deep,#14301f)] shrink-0 overflow-hidden">
+      <img id="fichaImg" src="" alt="" class="absolute inset-0 w-full h-full object-cover" />
+      <div class="absolute inset-0 bg-gradient-to-t from-[#0c1f16]/75 via-transparent to-transparent"></div>
+      <span id="fichaCategoria" class="absolute bottom-4 left-4 inline-flex items-center gap-1.5 bg-white/95 text-[var(--color-deep,#14301f)] text-xs font-black px-3.5 py-1.5 rounded-full shadow-md border border-[var(--color-sage,#8fb39b)]/50">
+        <svg class="w-3.5 h-3.5 text-[var(--color-secondary,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.leaf}></svg>
+        <span data-f="categoria"></span>
+      </span>
+    </div>
+
+    {/* Panel de Información y Atributos Científicos */}
+    <div class="relative p-6 md:p-9 md:overflow-y-auto flex flex-col gap-5">
+      <div class="relative">
+        <p class="text-[11px] font-bold tracking-widest text-[var(--color-secondary,#2e7d52)] uppercase mb-1.5">Ficha de especie &bull; Chocó Andino</p>
+        <h2 id="fichaNombre" class="text-3xl md:text-4xl font-black leading-tight text-[var(--color-ink,#1b2a22)] pr-12" data-f="nombre"></h2>
+        <p class="cho-serif italic text-lg md:text-xl text-[var(--color-primary,#1e4d36)] mt-1 font-serif" data-f="cientifico"></p>
+        <div class="mt-4 h-[3px] w-20 rounded-full bg-[var(--color-accent,#d4a63a)]"></div>
+      </div>
+
+      <dl class="relative grid gap-3">
+        {/* Estado de Conservación */}
+        <div class="flex items-start gap-3 bg-white/85 border border-[var(--color-sage,#8fb39b)]/40 rounded-2xl p-3.5 shadow-sm">
+          <span class="w-9 h-9 shrink-0 rounded-xl bg-[var(--color-accent-soft,#f6e7b8)] text-[var(--color-deep,#14301f)] flex items-center justify-center">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.shield}></svg>
+          </span>
+          <div>
+            <dt class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Estado de conservación</dt>
+            <dd class="mt-0.5">
+              <span class="cho-estado inline-block text-xs font-black px-2.5 py-1 rounded-full border" data-f="estado" data-tono="neutro"></span>
+            </dd>
+          </div>
+        </div>
+
+        {/* Hábitat */}
+        <div class="flex items-start gap-3 bg-white/85 border border-[var(--color-sage,#8fb39b)]/40 rounded-2xl p-3.5 shadow-sm">
+          <span class="w-9 h-9 shrink-0 rounded-xl bg-emerald-100 text-[var(--color-primary,#1e4d36)] flex items-center justify-center">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.mountain}></svg>
+          </span>
+          <div>
+            <dt class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Hábitat</dt>
+            <dd class="text-sm font-semibold text-[var(--color-ink,#1b2a22)]" data-f="habitat"></dd>
+          </div>
+        </div>
+
+        {/* Alimentación */}
+        <div class="flex items-start gap-3 bg-white/85 border border-[var(--color-sage,#8fb39b)]/40 rounded-2xl p-3.5 shadow-sm">
+          <span class="w-9 h-9 shrink-0 rounded-xl bg-emerald-100 text-[var(--color-primary,#1e4d36)] flex items-center justify-center">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.leaf}></svg>
+          </span>
+          <div>
+            <dt class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Alimentación</dt>
+            <dd class="text-sm font-semibold text-[var(--color-ink,#1b2a22)]" data-f="alimentacion"></dd>
+          </div>
+        </div>
+      </dl>
+
+      {/* Breve descripción */}
+      <div class="relative text-sm leading-relaxed text-zinc-700" id="fichaDescripcion"></div>
+
+      {/* Botones de acción */}
+      <div class="relative mt-auto flex flex-col sm:flex-row gap-2.5 pt-1">
+        <a 
+          id="fichaLink" 
+          href="#" 
+          class="cho-btn inline-flex items-center justify-center gap-2 bg-[var(--color-primary,#1e4d36)] hover:bg-[var(--color-secondary,#2e7d52)] text-white font-black text-sm px-5 py-3 rounded-2xl shadow-lg min-h-[44px]"
+        >
+          <span>Ver ficha completa y mapa</span>
+          <span>&rarr;</span>
+        </a>
+        <button 
+          id="fichaVolver" 
+          type="button" 
+          class="cho-btn inline-flex items-center justify-center gap-2 bg-white border border-[var(--color-sage,#8fb39b)] text-[var(--color-deep,#14301f)] font-black text-sm px-5 py-3 rounded-2xl hover:bg-[var(--color-accent-soft,#f6e7b8)] cursor-pointer min-h-[44px]"
+        >
+          Volver al catálogo
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,868 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { verifySession } from '../../db/auth';
+
+export const prerender = false;
+
+// Verificación de sesión de administrador
+const token = Astro.cookies.get('choco_session')?.value;
+const user = verifySession(token);
+if (!user) {
+  return Astro.redirect('/admin/login');
+}
+---
+
+<Layout title="Agregar Nueva Especie | Panel Chocó Andino">
+  <div class="w-full min-h-screen bg-[var(--cho-cream,#faf6ea)] text-[var(--cho-ink,#1b2a22)] flex flex-col m-0 p-0 selection:bg-emerald-700 selection:text-white">
+    
+    {/* Barra Superior del Panel */}
+    <header class="w-full bg-[var(--cho-deep,#14301f)] text-white border-b border-emerald-900/40 py-3.5 px-4 sm:px-6 md:px-10 sticky top-0 z-40 backdrop-blur-md shadow-md">
+      <div class="max-w-5xl mx-auto flex justify-between items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <a 
+            href="/admin" 
+            class="text-emerald-300 hover:text-white text-xs font-bold inline-flex items-center gap-1.5 bg-emerald-900/70 hover:bg-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-700/50 transition-colors"
+          >
+            &larr; Volver al Panel
+          </a>
+          <span class="text-emerald-700 hidden sm:inline">•</span>
+          <span class="text-xs font-black text-white uppercase tracking-wider hidden sm:inline">Nueva Especie</span>
+        </div>
+
+        <div class="text-xs text-emerald-200 font-semibold">
+          Reserva de la Biosfera Chocó Andino
+        </div>
+      </div>
+    </header>
+
+    {/* Formulario Principal */}
+    <main class="max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-10 space-y-8 flex-grow">
+      
+      <div class="bg-white/95 border border-emerald-200 rounded-[32px] p-6 sm:p-10 shadow-xl space-y-8">
+        
+        <div>
+          <span class="text-xs font-black text-[var(--cho-green,#2e7d52)] uppercase tracking-wider block mb-1">
+            Formulario de Biodiversidad
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-black text-[var(--cho-deep,#14301f)]">
+            Agregar Nueva Especie al Catálogo
+          </h1>
+          <p class="text-xs sm:text-sm text-zinc-600 mt-1">
+            Los datos se guardarán directamente en la base de datos permanente y aparecerán en la web pública de forma instantánea.
+          </p>
+        </div>
+
+        <div id="formAlert" class="hidden p-4 rounded-2xl text-xs sm:text-sm font-bold border"></div>
+
+        <form id="speciesForm" class="space-y-10">
+          
+          {/* SECCIÓN 1: IDENTIFICACIÓN BÁSICA */}
+          <div class="space-y-4 pt-2">
+            <div class="border-b border-emerald-100 pb-2 flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-[var(--cho-forest,#1e4d36)] text-white text-xs font-black flex items-center justify-center">1</span>
+              <h2 class="text-base font-black text-[var(--cho-deep,#14301f)] uppercase tracking-wide">
+                Identificación y Categoría
+              </h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              
+              <div class="space-y-1.5">
+                <label for="nombre" class="block text-xs font-black uppercase text-zinc-700">
+                  Nombre Común <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="nombre" 
+                  name="nombre" 
+                  required 
+                  placeholder="Ej: Colibrí Picoespada" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="nombreCientifico" class="block text-xs font-black uppercase text-zinc-700">
+                  Nombre Científico <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="nombreCientifico" 
+                  name="nombreCientifico" 
+                  required 
+                  placeholder="Ej: Ensifera ensifera" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm italic focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="categoria" class="block text-xs font-black uppercase text-zinc-700">
+                  Categoría <span class="text-rose-500">*</span>
+                </label>
+                <select 
+                  id="categoria" 
+                  name="categoria" 
+                  required 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-[var(--cho-deep,#14301f)] focus:outline-none focus:border-emerald-500 focus:bg-white transition-all cursor-pointer shadow-inner"
+                >
+                  <option value="Aves">Aves</option>
+                  <option value="Mamíferos">Mamíferos</option>
+                  <option value="Anfibios">Anfibios</option>
+                  <option value="Insectos">Insectos</option>
+                  <option value="Flora">Flora</option>
+                </select>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="estadoConservacion" class="block text-xs font-black uppercase text-zinc-700">
+                  Estado de Conservación <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="estadoConservacion" 
+                  name="estadoConservacion" 
+                  required 
+                  placeholder="Ej: Preocupación menor (LC) o Vulnerable (VU)" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="rangoAltitudinal" class="block text-xs font-black uppercase text-zinc-700">
+                  Rango Altitudinal
+                </label>
+                <input 
+                  type="text" 
+                  id="rangoAltitudinal" 
+                  name="rangoAltitudinal" 
+                  placeholder="Ej: 1.200 - 2.400 m s.n.m." 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="tamanoPeso" class="block text-xs font-black uppercase text-zinc-700">
+                  Tamaño / Peso
+                </label>
+                <input 
+                  type="text" 
+                  id="tamanoPeso" 
+                  name="tamanoPeso" 
+                  placeholder="Ej: 14 cm de longitud, 12-15 gramos" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+            </div>
+          </div>
+
+          {/* SECCIÓN 2: FOTOGRAFÍA ESPECÍFICA */}
+          <div class="space-y-4">
+            <div class="border-b border-emerald-100 pb-2 flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-[var(--cho-forest,#1e4d36)] text-white text-xs font-black flex items-center justify-center">2</span>
+              <h2 class="text-base font-black text-[var(--cho-deep,#14301f)] uppercase tracking-wide">
+                Fotografía de la Especie
+              </h2>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex gap-2 border-b border-emerald-100 pb-2">
+                <button 
+                  type="button" 
+                  id="tabUploadBtn" 
+                  class="px-4 py-2 rounded-xl text-xs font-black bg-[var(--cho-forest,#1e4d36)] text-white shadow-sm cursor-pointer"
+                >
+                  Subir desde mi computadora
+                </button>
+                <button 
+                  type="button" 
+                  id="tabUrlBtn" 
+                  class="px-4 py-2 rounded-xl text-xs font-bold bg-stone-100 hover:bg-emerald-50 text-zinc-700 border border-emerald-200 cursor-pointer"
+                >
+                  Usar URL de internet
+                </button>
+              </div>
+
+              {/* Panel de Subida desde Computadora */}
+              <div id="panelUpload" class="space-y-3">
+                <div class="border-2 border-dashed border-emerald-300 rounded-2xl p-6 text-center hover:bg-emerald-50/50 transition-colors">
+                  <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/webp,image/avif" class="hidden" />
+                  <label for="imageFileInput" class="cursor-pointer space-y-2 block">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto text-xl shadow-sm">
+                      📁
+                    </div>
+                    <p class="text-xs sm:text-sm font-bold text-zinc-800">
+                      Haz clic para seleccionar una foto de tu computadora
+                    </p>
+                    <p class="text-[11px] text-zinc-500">
+                      Formatos admitidos: JPG, PNG, WebP o AVIF (máx. 8 MB)
+                    </p>
+                  </label>
+                </div>
+                <div id="uploadStatus" class="hidden text-xs font-bold text-emerald-800"></div>
+              </div>
+
+              {/* Panel de URL Directa */}
+              <div id="panelUrl" class="hidden space-y-2">
+                <label for="imageUrlInput" class="block text-xs font-bold text-zinc-700">
+                  Pega la URL directa de la imagen:
+                </label>
+                <input 
+                  type="url" 
+                  id="imageUrlInput" 
+                  placeholder="https://ejemplo.com/imagenes/mi-especie.jpg" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+              {/* Input oculto final con la URL asignada */}
+              <input type="hidden" id="imagen" name="imagen" required />
+
+              {/* Vista previa de la foto */}
+              <div id="imagePreviewContainer" class="hidden mt-3 p-4 bg-stone-50 border border-emerald-200 rounded-2xl flex items-center gap-4">
+                <img id="imagePreview" src="" alt="Vista previa" class="w-24 h-24 rounded-xl object-cover border border-emerald-300 shadow-md" />
+                <div class="text-xs space-y-1">
+                  <span class="text-[10px] uppercase font-black tracking-widest text-[var(--cho-green,#2e7d52)] block">Foto verificada lista</span>
+                  <p id="imagePreviewUrl" class="font-mono text-zinc-600 truncate max-w-md"></p>
+                  <button type="button" id="removeImageBtn" class="text-rose-600 font-bold hover:underline">Quitar foto</button>
+                </div>
+              </div>
+
+              <div class="space-y-1.5 pt-1">
+                <label for="altImagen" class="block text-xs font-black uppercase text-zinc-700">
+                  Texto descriptivo / accesibilidad (alt)
+                </label>
+                <input 
+                  type="text" 
+                  id="altImagen" 
+                  name="altImagen" 
+                  placeholder="Ej: Colibrí picoespada posado en una rama en Mindo" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN 3: DESCRIPCIÓN Y HÁBITAT */}
+          <div class="space-y-4">
+            <div class="border-b border-emerald-100 pb-2 flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-[var(--cho-forest,#1e4d36)] text-white text-xs font-black flex items-center justify-center">3</span>
+              <h2 class="text-base font-black text-[var(--cho-deep,#14301f)] uppercase tracking-wide">
+                Descripción, Hábitat y Alimentación
+              </h2>
+            </div>
+
+            <div class="space-y-4">
+              <div class="space-y-1.5">
+                <label for="descripcion" class="block text-xs font-black uppercase text-zinc-700">
+                  Descripción General <span class="text-rose-500">*</span>
+                </label>
+                <textarea 
+                  id="descripcion" 
+                  name="descripcion" 
+                  rows="3" 
+                  required 
+                  placeholder="Resumen claro y pedagógico sobre la especie y su presencia en el Chocó Andino..." 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                ></textarea>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <label for="habitat" class="block text-xs font-black uppercase text-zinc-700">
+                    Hábitat Natural <span class="text-rose-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="habitat" 
+                    name="habitat" 
+                    required 
+                    placeholder="Ej: Bosque montano nublado y sotobosque húmedo" 
+                    class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                  />
+                </div>
+
+                <div class="space-y-1.5">
+                  <label for="alimentacion" class="block text-xs font-black uppercase text-zinc-700">
+                    Alimentación / Nutrición <span class="text-rose-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="alimentacion" 
+                    name="alimentacion" 
+                    required 
+                    placeholder="Ej: Néctar de flores tubulares como Passiflora, insectos pequeños" 
+                    class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                  />
+                </div>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="caracteristicasFisicas" class="block text-xs font-black uppercase text-zinc-700">
+                  Características Físicas y Morfología
+                </label>
+                <textarea 
+                  id="caracteristicasFisicas" 
+                  name="caracteristicasFisicas" 
+                  rows="2" 
+                  placeholder="Detalles de coloración, pico, alas, pelaje o follaje..." 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                ></textarea>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="rasgosIdentificacion" class="block text-xs font-black uppercase text-zinc-700">
+                  Rasgos Clave para Reconocerla en Campo
+                </label>
+                <textarea 
+                  id="rasgosIdentificacion" 
+                  name="rasgosIdentificacion" 
+                  rows="2" 
+                  placeholder="Signos distintivos únicos que permiten identificarla en observación de campo..." 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                ></textarea>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="distribucionGeografica" class="block text-xs font-black uppercase text-zinc-700">
+                  Distribución en Pichincha / Chocó Andino
+                </label>
+                <input 
+                  type="text" 
+                  id="distribucionGeografica" 
+                  name="distribucionGeografica" 
+                  placeholder="Ej: Parroquias de Mindo, Nono, Nanegalito y Reserva Maquipucuna" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+            </div>
+          </div>
+
+          {/* SECCIÓN 4: COMPORTAMIENTO Y ECOLOGÍA */}
+          <div class="space-y-4">
+            <div class="border-b border-emerald-100 pb-2 flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-[var(--cho-forest,#1e4d36)] text-white text-xs font-black flex items-center justify-center">4</span>
+              <h2 class="text-base font-black text-[var(--cho-deep,#14301f)] uppercase tracking-wide">
+                Ecología, Comportamiento y Reproducción
+              </h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label for="comportamientoHabitos" class="block text-xs font-black uppercase text-zinc-700">
+                  Comportamiento y Hábitos (o Condiciones de Crecimiento)
+                </label>
+                <textarea 
+                  id="comportamientoHabitos" 
+                  name="comportamientoHabitos" 
+                  rows="3" 
+                  placeholder="Actividad diurna/nocturna, territorialidad, patrones de vuelo..." 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                ></textarea>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="reproduccionCiclo" class="block text-xs font-black uppercase text-zinc-700">
+                  Reproducción y Ciclo Vital
+                </label>
+                <textarea 
+                  id="reproduccionCiclo" 
+                  name="reproduccionCiclo" 
+                  rows="3" 
+                  placeholder="Cortejo, nidificación, época de cría o floración y polinización..." 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label for="funcionEcologica" class="block text-xs font-black uppercase text-zinc-700">
+                  Función Ecológica Primaria
+                </label>
+                <textarea 
+                  id="funcionEcologica" 
+                  name="funcionEcologica" 
+                  rows="2" 
+                  placeholder="Polinización de epífitas, dispersión de semillas, control de plagas..." 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                ></textarea>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="importanciaChocoAndino" class="block text-xs font-black uppercase text-zinc-700">
+                  Valor para el Chocó Andino
+                </label>
+                <textarea 
+                  id="importanciaChocoAndino" 
+                  name="importanciaChocoAndino" 
+                  rows="2" 
+                  placeholder="Importancia cultural, bioindicador de agua limpia, ecoturismo..." 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label for="amenazasPrincipales" class="block text-xs font-black uppercase text-zinc-700">
+                  Principales Amenazas
+                </label>
+                <textarea 
+                  id="amenazasPrincipales" 
+                  name="amenazasPrincipales" 
+                  rows="2" 
+                  placeholder="Deforestación, fragmentación de cuencas, cambio climático..." 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                ></textarea>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="medidasProteccion" class="block text-xs font-black uppercase text-zinc-700">
+                  Medidas y Acciones de Protección
+                </label>
+                <textarea 
+                  id="medidasProteccion" 
+                  name="medidasProteccion" 
+                  rows="2" 
+                  placeholder="Corredores ecológicos, reservas comunitarias, monitoreo biológico..." 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                ></textarea>
+              </div>
+            </div>
+
+          </div>
+
+          {/* SECCIÓN 5: CAMPOS EXCLUSIVOS DE FLORA (Se muestran dinámicamente) */}
+          <div id="floraExtraSection" class="hidden space-y-4 bg-emerald-50/50 p-5 rounded-2xl border border-emerald-200">
+            <div class="border-b border-emerald-200 pb-2">
+              <h2 class="text-sm font-black text-emerald-900 uppercase tracking-wide">
+                Detalles Botánicos (Exclusivo para Flora)
+              </h2>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label for="botanicaHojas" class="block text-xs font-bold text-zinc-700">Hojas / Frondas</label>
+                <input type="text" id="botanicaHojas" placeholder="Ej: Hojas coriáceas, pecioladas de hasta 40 cm" class="w-full bg-white border border-emerald-200 rounded-xl p-2.5 text-xs sm:text-sm" />
+              </div>
+              <div class="space-y-1.5">
+                <label for="botanicaFlores" class="block text-xs font-bold text-zinc-700">Flores / Inflorescencias</label>
+                <input type="text" id="botanicaFlores" placeholder="Ej: Espádice amarillo y espata verde esmeralda" class="w-full bg-white border border-emerald-200 rounded-xl p-2.5 text-xs sm:text-sm" />
+              </div>
+              <div class="space-y-1.5">
+                <label for="botanicaFrutos" class="block text-xs font-bold text-zinc-700">Frutos / Semillas / Esporas</label>
+                <input type="text" id="botanicaFrutos" placeholder="Ej: Bayas rojas que atraen aves frugívoras" class="w-full bg-white border border-emerald-200 rounded-xl p-2.5 text-xs sm:text-sm" />
+              </div>
+              <div class="space-y-1.5">
+                <label for="botanicaTronco" class="block text-xs font-bold text-zinc-700">Tallo / Tronco / Raíces</label>
+                <input type="text" id="botanicaTronco" placeholder="Ej: Epífita con raíces adherentes a la corteza" class="w-full bg-white border border-emerald-200 rounded-xl p-2.5 text-xs sm:text-sm" />
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN 6: CURIOSIDADES Y FUENTES */}
+          <div class="space-y-4">
+            <div class="border-b border-emerald-100 pb-2 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-[var(--cho-forest,#1e4d36)] text-white text-xs font-black flex items-center justify-center">5</span>
+                <h2 class="text-base font-black text-[var(--cho-deep,#14301f)] uppercase tracking-wide">
+                  Datos Curiosos y Fuentes
+                </h2>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="block text-xs font-black uppercase text-zinc-700">
+                Datos Curiosos (1 a 3 hechos fascinantes)
+              </label>
+              <div id="curiosidadesList" class="space-y-2">
+                <input type="text" class="curiosidad-input w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm" placeholder="Curiosidad #1: Es la única ave con un pico más largo que su cuerpo..." />
+                <input type="text" class="curiosidad-input w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm" placeholder="Curiosidad #2: Su lengua se extiende casi el doble del largo del pico..." />
+              </div>
+              <button type="button" id="addCuriosidadBtn" class="text-xs font-bold text-[var(--cho-forest,#1e4d36)] hover:underline inline-flex items-center gap-1">
+                + Añadir otro dato curioso
+              </button>
+            </div>
+
+            <div class="space-y-3 pt-3 border-t border-emerald-100">
+              <label class="block text-xs font-black uppercase text-zinc-700">
+                Fuentes Bibliográficas y Enlaces de Consulta
+              </label>
+              <div id="fuentesList" class="space-y-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 fuente-row">
+                  <input type="text" class="fuente-titulo w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs" placeholder="Título: Birds of the World / UICN" />
+                  <input type="url" class="fuente-enlace w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs" placeholder="Enlace web (opcional): https://..." />
+                </div>
+              </div>
+              <button type="button" id="addFuenteBtn" class="text-xs font-bold text-[var(--cho-forest,#1e4d36)] hover:underline inline-flex items-center gap-1">
+                + Añadir otra fuente bibliográfica
+              </button>
+            </div>
+          </div>
+
+          {/* SECCIÓN 7: REGISTRO DE DISTRIBUCIÓN GPS (OPCIONAL) */}
+          <div class="space-y-4 pt-2">
+            <div class="border-b border-emerald-100 pb-2 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-[var(--cho-forest,#1e4d36)] text-white text-xs font-black flex items-center justify-center">7</span>
+                <h2 class="text-base font-black text-[var(--cho-deep,#14301f)] uppercase tracking-wide">
+                  Punto de Presencia GPS y Mapa (Opcional)
+                </h2>
+              </div>
+              <span class="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                Modelo generado automáticamente si se deja en blanco
+              </span>
+            </div>
+
+            <p class="text-xs text-zinc-600">
+              El mapa de distribución potencial se calculará automáticamente según el rango altitudinal y bioma de la especie. Si cuentas con un punto de observación geoespacial confirmado en Ecuador, ingrésalo aquí:
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-stone-50/70 p-4 rounded-2xl border border-emerald-100">
+              <div class="space-y-1 sm:col-span-2">
+                <label for="gpsLocalidad" class="block text-[11px] font-bold uppercase text-zinc-700">
+                  Localidad / Reserva en el Chocó Andino
+                </label>
+                <input 
+                  type="text" 
+                  id="gpsLocalidad" 
+                  placeholder="Ej: Reserva Maquipucuna - Sendero al Río" 
+                  class="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div class="space-y-1">
+                <label for="gpsLat" class="block text-[11px] font-bold uppercase text-zinc-700">
+                  Latitud (Ej: 0.1250)
+                </label>
+                <input 
+                  type="number" 
+                  step="any" 
+                  id="gpsLat" 
+                  placeholder="0.1250" 
+                  class="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div class="space-y-1">
+                <label for="gpsLng" class="block text-[11px] font-bold uppercase text-zinc-700">
+                  Longitud (Ej: -78.6310)
+                </label>
+                <input 
+                  type="number" 
+                  step="any" 
+                  id="gpsLng" 
+                  placeholder="-78.6310" 
+                  class="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div class="space-y-1 sm:col-span-2">
+                <label for="gpsFuente" class="block text-[11px] font-bold uppercase text-zinc-700">
+                  Fuente / Registro
+                </label>
+                <input 
+                  type="text" 
+                  id="gpsFuente" 
+                  placeholder="Ej: Monitoreo Biológico 2026" 
+                  class="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div class="space-y-1 sm:col-span-2">
+                <label for="gpsDetalles" class="block text-[11px] font-bold uppercase text-zinc-700">
+                  Observaciones de Campo
+                </label>
+                <input 
+                  type="text" 
+                  id="gpsDetalles" 
+                  placeholder="Ej: Individuo observado en estrato medio al amanecer." 
+                  class="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* BOTONES DE ACCIÓN */}
+          <div class="pt-6 border-t border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <a 
+              href="/admin" 
+              class="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold text-zinc-600 hover:bg-stone-100 border border-stone-300 flex items-center justify-center transition-colors"
+            >
+              Cancelar
+            </a>
+
+            <button 
+              type="submit" 
+              id="saveBtn"
+              class="w-full sm:w-auto min-h-[52px] bg-[var(--cho-forest,#1e4d36)] hover:bg-[var(--cho-deep,#14301f)] text-white font-black px-8 py-3.5 rounded-2xl text-sm transition-all shadow-xl hover:shadow-2xl flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <svg class="w-5 h-5 text-[var(--cho-gold,#d4a63a)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Guardar Especie en la Base de Datos</span>
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    // Control de Categoría Flora (campos botánicos)
+    const categoriaSelect = document.getElementById('categoria') as HTMLSelectElement;
+    const floraSection = document.getElementById('floraExtraSection')!;
+
+    categoriaSelect?.addEventListener('change', () => {
+      floraSection.classList.toggle('hidden', categoriaSelect.value !== 'Flora');
+    });
+
+    // Control de Pestañas de Imagen (Subir vs URL)
+    const tabUploadBtn = document.getElementById('tabUploadBtn')!;
+    const tabUrlBtn = document.getElementById('tabUrlBtn')!;
+    const panelUpload = document.getElementById('panelUpload')!;
+    const panelUrl = document.getElementById('panelUrl')!;
+    const imageFileInput = document.getElementById('imageFileInput') as HTMLInputElement;
+    const imageUrlInput = document.getElementById('imageUrlInput') as HTMLInputElement;
+    const imagenFinalInput = document.getElementById('imagen') as HTMLInputElement;
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer')!;
+    const imagePreview = document.getElementById('imagePreview') as HTMLImageElement;
+    const imagePreviewUrl = document.getElementById('imagePreviewUrl')!;
+    const removeImageBtn = document.getElementById('removeImageBtn')!;
+    const uploadStatus = document.getElementById('uploadStatus')!;
+
+    tabUploadBtn.addEventListener('click', () => {
+      tabUploadBtn.className = 'px-4 py-2 rounded-xl text-xs font-black bg-[var(--cho-forest,#1e4d36)] text-white shadow-sm cursor-pointer';
+      tabUrlBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-stone-100 hover:bg-emerald-50 text-zinc-700 border border-emerald-200 cursor-pointer';
+      panelUpload.classList.remove('hidden');
+      panelUrl.classList.add('hidden');
+    });
+
+    tabUrlBtn.addEventListener('click', () => {
+      tabUrlBtn.className = 'px-4 py-2 rounded-xl text-xs font-black bg-[var(--cho-forest,#1e4d36)] text-white shadow-sm cursor-pointer';
+      tabUploadBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-stone-100 hover:bg-emerald-50 text-zinc-700 border border-emerald-200 cursor-pointer';
+      panelUrl.classList.remove('hidden');
+      panelUpload.classList.add('hidden');
+    });
+
+    // Manejar subida de archivo
+    imageFileInput.addEventListener('change', async () => {
+      const file = imageFileInput.files?.[0];
+      if (!file) return;
+
+      uploadStatus.classList.remove('hidden');
+      uploadStatus.textContent = 'Subiendo imagen al servidor seguro...';
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          uploadStatus.textContent = '✓ Imagen subida con éxito';
+          imagenFinalInput.value = data.url;
+          imagePreview.src = data.url;
+          imagePreviewUrl.textContent = data.url;
+          imagePreviewContainer.classList.remove('hidden');
+        } else {
+          uploadStatus.textContent = '✗ Error: ' + (data.error || 'No se pudo subir la foto');
+        }
+      } catch (err) {
+        uploadStatus.textContent = '✗ Error de conexión al subir la imagen';
+      }
+    });
+
+    // Manejar URL de internet
+    imageUrlInput.addEventListener('input', () => {
+      const url = imageUrlInput.value.trim();
+      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/')) {
+        imagenFinalInput.value = url;
+        imagePreview.src = url;
+        imagePreviewUrl.textContent = url;
+        imagePreviewContainer.classList.remove('hidden');
+      }
+    });
+
+    removeImageBtn.addEventListener('click', () => {
+      imagenFinalInput.value = '';
+      imageUrlInput.value = '';
+      imageFileInput.value = '';
+      imagePreview.src = '';
+      imagePreviewContainer.classList.add('hidden');
+      uploadStatus.classList.add('hidden');
+    });
+
+    // Dinamismo de Curiosidades y Fuentes
+    document.getElementById('addCuriosidadBtn')?.addEventListener('click', () => {
+      const list = document.getElementById('curiosidadesList')!;
+      const count = list.querySelectorAll('.curiosidad-input').length + 1;
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.className = 'curiosidad-input w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm';
+      inp.placeholder = `Curiosidad #${count}...`;
+      list.appendChild(inp);
+    });
+
+    document.getElementById('addFuenteBtn')?.addEventListener('click', () => {
+      const list = document.getElementById('fuentesList')!;
+      const row = document.createElement('div');
+      row.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2 fuente-row';
+      row.innerHTML = `
+        <input type="text" class="fuente-titulo w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs" placeholder="Título de la fuente" />
+        <input type="url" class="fuente-enlace w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs" placeholder="Enlace web (opcional)" />
+      `;
+      list.appendChild(row);
+    });
+
+    // Envío del Formulario
+    const form = document.getElementById('speciesForm') as HTMLFormElement;
+    const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
+    const formAlert = document.getElementById('formAlert')!;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formAlert.classList.add('hidden');
+
+      const imagen = imagenFinalInput.value.trim();
+      if (!imagen) {
+        formAlert.className = 'p-4 rounded-2xl text-xs sm:text-sm font-bold border bg-rose-100 text-rose-900 border-rose-300 block';
+        formAlert.textContent = 'Debes subir una foto o proporcionar una URL válida antes de guardar.';
+        panelUpload.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+
+      saveBtn.disabled = true;
+      const originalText = saveBtn.innerHTML;
+      saveBtn.innerHTML = '<span>Guardando en la base de datos...</span>';
+
+      // Recopilar curiosidades
+      const curiosidades: string[] = [];
+      document.querySelectorAll('.curiosidad-input').forEach((el) => {
+        const val = (el as HTMLInputElement).value.trim();
+        if (val) curiosidades.push(val);
+      });
+
+      // Recopilar fuentes
+      const fuentes: { titulo: string; enlace?: string }[] = [];
+      document.querySelectorAll('.fuente-row').forEach((row) => {
+        const tit = (row.querySelector('.fuente-titulo') as HTMLInputElement)?.value.trim();
+        const enl = (row.querySelector('.fuente-enlace') as HTMLInputElement)?.value.trim();
+        if (tit) fuentes.push({ titulo: tit, enlace: enl || undefined });
+      });
+
+      // Órganos botánicos si aplica
+      let caracteristicasBotanicas: any = undefined;
+      const cat = (document.getElementById('categoria') as HTMLSelectElement).value;
+      if (cat === 'Flora') {
+        caracteristicasBotanicas = {
+          hojas: (document.getElementById('botanicaHojas') as HTMLInputElement)?.value.trim() || undefined,
+          flores: (document.getElementById('botanicaFlores') as HTMLInputElement)?.value.trim() || undefined,
+          frutosSemillas: (document.getElementById('botanicaFrutos') as HTMLInputElement)?.value.trim() || undefined,
+          troncoRaices: (document.getElementById('botanicaTronco') as HTMLInputElement)?.value.trim() || undefined,
+        };
+      }
+
+      const payload = {
+        nombre: (document.getElementById('nombre') as HTMLInputElement).value.trim(),
+        nombreCientifico: (document.getElementById('nombreCientifico') as HTMLInputElement).value.trim(),
+        categoria: cat,
+        estadoConservacion: (document.getElementById('estadoConservacion') as HTMLInputElement).value.trim(),
+        rangoAltitudinal: (document.getElementById('rangoAltitudinal') as HTMLInputElement)?.value.trim(),
+        tamanoPeso: (document.getElementById('tamanoPeso') as HTMLInputElement)?.value.trim(),
+        imagen,
+        altImagen: (document.getElementById('altImagen') as HTMLInputElement)?.value.trim(),
+        descripcion: (document.getElementById('descripcion') as HTMLTextAreaElement).value.trim(),
+        habitat: (document.getElementById('habitat') as HTMLInputElement).value.trim(),
+        alimentacion: (document.getElementById('alimentacion') as HTMLInputElement).value.trim(),
+        caracteristicasFisicas: (document.getElementById('caracteristicasFisicas') as HTMLTextAreaElement)?.value.trim(),
+        rasgosIdentificacion: (document.getElementById('rasgosIdentificacion') as HTMLTextAreaElement)?.value.trim(),
+        distribucionGeografica: (document.getElementById('distribucionGeografica') as HTMLInputElement)?.value.trim(),
+        comportamientoHabitos: (document.getElementById('comportamientoHabitos') as HTMLTextAreaElement)?.value.trim(),
+        reproduccionCiclo: (document.getElementById('reproduccionCiclo') as HTMLTextAreaElement)?.value.trim(),
+        funcionEcologica: (document.getElementById('funcionEcologica') as HTMLTextAreaElement)?.value.trim(),
+        importanciaChocoAndino: (document.getElementById('importanciaChocoAndino') as HTMLTextAreaElement)?.value.trim(),
+        amenazasPrincipales: (document.getElementById('amenazasPrincipales') as HTMLTextAreaElement)?.value.trim(),
+        medidasProteccion: (document.getElementById('medidasProteccion') as HTMLTextAreaElement)?.value.trim(),
+        caracteristicasBotanicas,
+        datosCuriosos: curiosidades,
+        fuentes,
+        distribucionPotencial: (() => {
+          const loc = (document.getElementById('gpsLocalidad') as HTMLInputElement)?.value.trim();
+          const lat = parseFloat((document.getElementById('gpsLat') as HTMLInputElement)?.value || '');
+          const lng = parseFloat((document.getElementById('gpsLng') as HTMLInputElement)?.value || '');
+          const fuente = (document.getElementById('gpsFuente') as HTMLInputElement)?.value.trim();
+          const detalles = (document.getElementById('gpsDetalles') as HTMLInputElement)?.value.trim();
+          if (loc && !isNaN(lat) && !isNaN(lng)) {
+            return {
+              disponible: true,
+              estadoValidacion: 'en_evaluacion',
+              centroMapa: [lat, lng],
+              zoomInicial: 11,
+              registrosPresencia: [
+                {
+                  localidad: loc,
+                  lat,
+                  lng,
+                  altitud: (document.getElementById('rangoAltitudinal') as HTMLInputElement)?.value.trim() || '1.400 m s.n.m.',
+                  fuente: fuente || 'Registro de Campo',
+                  detalles: detalles || undefined,
+                  tipoRegistro: 'Observación en campo'
+                }
+              ]
+            };
+          }
+          return undefined;
+        })(),
+      };
+
+      try {
+        const res = await fetch('/api/especies', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          formAlert.className = 'p-5 rounded-2xl text-xs sm:text-sm font-bold border bg-emerald-100 text-emerald-950 border-emerald-300 block space-y-2';
+          formAlert.innerHTML = `
+            <div>✓ ¡Especie guardada con éxito en la base de datos!</div>
+            <div class="text-xs font-normal">Ya está disponible en la categoría <strong>${payload.categoria}</strong> del catálogo público.</div>
+            <div class="pt-2 flex gap-3">
+              <a href="/especies/${data.especie.id}" target="_blank" class="underline font-bold text-emerald-900">Ver ficha pública &rarr;</a>
+              <a href="/admin" class="underline font-bold text-emerald-900">Ir al listado del panel &rarr;</a>
+            </div>
+          `;
+          formAlert.scrollIntoView({ behavior: 'smooth' });
+          form.reset();
+          imagePreviewContainer.classList.add('hidden');
+          imagenFinalInput.value = '';
+        } else {
+          formAlert.className = 'p-4 rounded-2xl text-xs sm:text-sm font-bold border bg-rose-100 text-rose-900 border-rose-300 block';
+          formAlert.textContent = data.error || 'Ocurrió un error al guardar la especie';
+          formAlert.scrollIntoView({ behavior: 'smooth' });
+        }
+      } catch (err) {
+        formAlert.className = 'p-4 rounded-2xl text-xs sm:text-sm font-bold border bg-rose-100 text-rose-900 border-rose-300 block';
+        formAlert.textContent = 'Error de conexión con el servidor.';
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+      }
+    });
+  </script>
+</Layout>

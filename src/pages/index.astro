@@ -1,0 +1,777 @@
+---
+// ==========================================================================
+// 🌿 PÁGINA PRINCIPAL: CHOCÓ ANDINO DE PICHINCHA - RESERVA DE LA BIOSFERA
+// --------------------------------------------------------------------------
+// Proyecto educativo y científico desarrollado para presentación de tesis.
+// Código modular, limpio y organizado para fácil comprensión y cambios en vivo.
+// ==========================================================================
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Hero from '../components/Hero.astro';
+import Territorio from '../components/Territorio.astro';
+import SpeciesCard from '../components/SpeciesCard.astro';
+import AprendeModal from '../components/AprendeModal.astro';
+import FichaModal from '../components/FichaModal.astro';
+import Footer from '../components/Footer.astro';
+import { getAllSpecies } from '../db/species';
+
+export const prerender = false;
+
+// 1. Obtención de especies directamente desde la base de datos SQLite
+const especies = getAllSpecies();
+
+// 2. Categorías oficiales del catálogo (5 categorías exactas + opción Todas)
+const categorias = ['Todas', 'Aves', 'Mamíferos', 'Anfibios', 'Insectos', 'Flora'];
+
+// 3. Iconografía SVG optimizada de estilo trazo limpio (Lucide/Heroicons)
+const ic = {
+  leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c2 2 2.6 3.5 3.7 9.2A7 7 0 0 1 11 20z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/><path d="M12 11c-2 2-3 4-3 6"/>',
+  bird: '<path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20"/><path d="m20 7 2 .5-2 .5"/><path d="M10 18v3"/><path d="M14 17.75V21"/><path d="M7 18a6 6 0 0 0 3.84-10.61"/>',
+  paw: '<circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>',
+  water: '<path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/>',
+  bug: '<path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-4"/><path d="M22 13h-4"/>',
+  flower: '<circle cx="12" cy="12" r="3"/><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 1 1 4.5 4.5 4.5 4.5 0 1 1-4.5 4.5"/><path d="M12 7.5V9"/><path d="M7.5 12H9"/><path d="M16.5 12H15"/><path d="M12 16.5V15"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'
+};
+
+const iconoCat = (cat: string) =>
+  cat === 'Todas' ? ic.leaf : cat === 'Aves' ? ic.bird : cat === 'Mamíferos' ? ic.paw : cat === 'Anfibios' ? ic.water : cat === 'Insectos' ? ic.bug : ic.flower;
+
+// 4. Estructura de las 5 secciones temáticas del catálogo
+const secciones = [
+  { 
+    id: 'sec-aves', 
+    cat: 'Aves', 
+    clase: 'aves', 
+    icono: ic.bird, 
+    titulo: 'Aves de la Reserva', 
+    sub: 'Descubre las aves que llenan de color y cantos los bosques del Chocó Andino.',
+    items: especies.filter((e) => e.data.categoria === 'Aves') 
+  },
+  { 
+    id: 'sec-mamiferos', 
+    cat: 'Mamíferos', 
+    clase: 'mamiferos', 
+    icono: ic.paw, 
+    titulo: 'Mamíferos de la Reserva', 
+    sub: 'Grandes carnívoros, herbívoros y dispersores esenciales para la regeneración natural.',
+    items: especies.filter((e) => e.data.categoria === 'Mamíferos') 
+  },
+  { 
+    id: 'sec-anfibios', 
+    cat: 'Anfibios', 
+    clase: 'anfibios', 
+    icono: ic.water, 
+    titulo: 'Anfibios de la Reserva', 
+    sub: 'Habitantes bioindicadores de las quebradas cristalinas y riachuelos limpios de montaña.',
+    items: especies.filter((e) => e.data.categoria === 'Anfibios') 
+  },
+  { 
+    id: 'sec-insectos', 
+    cat: 'Insectos', 
+    clase: 'insectos', 
+    icono: ic.bug, 
+    titulo: 'Insectos de la Reserva', 
+    sub: 'Polinizadores, descomponedores y pequeños artífices del equilibrio ecológico.',
+    items: especies.filter((e) => e.data.categoria === 'Insectos') 
+  },
+  { 
+    id: 'sec-flora', 
+    cat: 'Flora', 
+    clase: 'flora', 
+    icono: ic.flower, 
+    titulo: 'Flora de la Reserva', 
+    sub: 'Orquídeas, bromelias epífitas y árboles ancestrales del bosque nublado andino.',
+    items: especies.filter((e) => e.data.categoria === 'Flora') 
+  }
+];
+---
+
+<Layout title="Chocó Andino de Pichincha | Reserva de la Biosfera">
+  <main class="w-full min-h-screen bg-[var(--color-background,#faf6ea)] text-[var(--color-ink,#1b2a22)] flex flex-col m-0 p-0 selection:bg-emerald-500 selection:text-white relative overflow-x-hidden">
+    
+    {/* Destellos de iluminación ambiental sutiles en el fondo */}
+    <div class="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-300/25 rounded-full blur-[130px] pointer-events-none z-0"></div>
+    <div class="absolute top-[35%] right-10 w-[450px] h-[450px] bg-amber-200/25 rounded-full blur-[130px] pointer-events-none z-0"></div>
+    
+    {/* =====================================================================
+         1. BARRA DE NAVEGACIÓN Y CABECERA INSTITUCIONAL
+         - Opciones limpias: Aprende | Catálogo | Panel de administrador
+         ===================================================================== */}
+    <Navbar />
+
+    {/* =====================================================================
+         2. SECCIÓN HERO (PORTADA Y ACCESOS RÁPIDOS)
+         ===================================================================== */}
+    <Hero />
+
+    {/* =====================================================================
+         3. SECCIÓN TERRITORIO (MÉTRICAS Y RESERVA DE BIOSFERA)
+         ===================================================================== */}
+    <Territorio />
+
+    {/* =====================================================================
+         4. CATÁLOGO CIENTÍFICO DE BIODIVERSIDAD (5 CATEGORÍAS)
+         ===================================================================== */}
+    <section id="catalogo" class="w-full bg-[var(--color-background,#faf6ea)] py-20 px-6 md:px-12 lg:px-16 flex-grow z-10 relative overflow-hidden">
+      
+      {/* Fondo de cordillera andina estilizada */}
+      <div class="absolute inset-x-0 top-0 h-64 md:h-80 pointer-events-none z-0" aria-hidden="true">
+        <svg class="absolute inset-0 w-full h-full text-[var(--color-sage,#8fb39b)]" viewBox="0 0 1440 300" preserveAspectRatio="none" fill="currentColor">
+          <path opacity=".22" d="M0 300V150L120 90 230 140 380 40 520 130 660 60 800 150 950 70 1100 140 1260 60 1440 130V300Z" />
+          <path opacity=".16" d="M0 300V210L150 150 280 200 430 120 590 205 740 140 900 210 1060 150 1220 205 1440 160V300Z" />
+        </svg>
+      </div>
+
+      <div class="relative z-10 w-full max-w-7xl mx-auto space-y-16">
+        
+        {/* Cabecera del Catálogo */}
+        <div class="text-center space-y-4 max-w-3xl mx-auto">
+          <div class="inline-flex items-center gap-2 bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-black px-4 py-1.5 rounded-full shadow-sm uppercase tracking-widest">
+            <svg class="w-4 h-4 text-[var(--color-secondary,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.leaf}></svg> 
+            <span>CHOCÓ ANDINO DE PICHINCHA</span>
+          </div>
+
+          <h2 class="text-4xl md:text-5xl font-black text-[var(--color-ink,#1b2a22)] tracking-tight">
+            Catálogo de Biodiversidad
+          </h2>
+
+          <p class="text-zinc-600 text-sm md:text-base leading-relaxed">
+            Conoce las especies emblemáticas que habitan en la Reserva de Biosfera del Chocó Andino. Explora sus fichas y mapas de distribución potencial.
+          </p>
+
+          {/* Barra de Búsqueda y Botones de Filtro */}
+          <div class="pt-6 flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-[28px] border border-emerald-200 shadow-xl">
+            <div class="relative w-full md:w-96">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-[var(--color-secondary,#2e7d52)]">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.search}></svg>
+              </span>
+              <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Buscar especie por nombre científico o común..." 
+                class="w-full bg-zinc-50 border border-emerald-100 rounded-2xl pl-11 pr-4 py-3 text-xs md:text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+              />
+            </div>
+
+            <div class="flex flex-wrap gap-2 w-full md:w-auto justify-center" id="categoryFilters">
+              {categorias.map((cat) => (
+                <button 
+                  type="button"
+                  data-category={cat}
+                  class={`category-btn cho-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    cat === 'Todas' 
+                      ? 'bg-[var(--color-deep,#14301f)] text-white shadow-md' 
+                      : 'bg-white hover:bg-emerald-50 text-zinc-700 border border-emerald-200 shadow-sm'
+                  }`}
+                >
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={iconoCat(cat)}></svg>
+                  <span>{cat}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 5 Secciones Categorizadas: Aves, Mamíferos, Anfibios, Insectos, Flora */}
+        {secciones.map((sec, index) => (
+          <>
+            <div id={sec.id} class={`space-y-6 category-section cho-sec cho-sec--${sec.clase}`} data-section-cat={sec.cat}>
+              {/* Encabezado de la Categoría */}
+              <div class="border-b border-emerald-200 pb-4 flex items-center justify-between relative">
+                <div class="absolute -bottom-px left-0 h-[3px] w-24 bg-[var(--color-accent,#d4a63a)] rounded-full"></div>
+                <div class="flex items-center gap-3.5">
+                  <div class="cho-sec-icon w-11 h-11 rounded-2xl bg-[var(--color-primary,#1e4d36)] text-white flex items-center justify-center shadow-md">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={sec.icono}></svg>
+                  </div>
+                  <div>
+                    <h3 class="text-xl md:text-2xl font-black text-[var(--color-ink,#1b2a22)]">{sec.titulo}</h3>
+                    <p class="text-xs text-zinc-500 font-medium">{sec.sub}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cuadrícula de Tarjetas Reutilizables */}
+              <div class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {sec.items.map((especie) => (
+                  <SpeciesCard especie={especie} />
+                ))}
+              </div>
+            </div>
+
+            {/* Banner Inspiracional tras la sección de Mamíferos */}
+            {index === 1 && (
+              <div class="w-full bg-gradient-to-r from-[var(--color-deep,#14301f)] to-[var(--color-primary,#1e4d36)] rounded-[32px] p-8 md:p-12 pb-14 text-white relative overflow-hidden shadow-2xl flex flex-col items-center text-center space-y-4">
+                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+                <span class="relative z-10 text-[var(--color-accent,#d4a63a)]">
+                  <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.leaf}></svg>
+                </span>
+                <h3 class="relative z-10 text-2xl md:text-3xl font-black italic tracking-tight max-w-2xl">
+                  “Conocer nuestra biodiversidad es el primer paso para protegerla”
+                </h3>
+                <p class="relative z-10 text-xs md:text-sm text-emerald-200 font-medium">
+                  Reserva de la Biosfera del Chocó Andino de Pichincha &bull; UNESCO
+                </p>
+              </div>
+            )}
+          </>
+        ))}
+
+        {/* Mensaje de Sin Resultados */}
+        <div id="noResults" class="hidden text-center py-16 text-zinc-500 text-sm font-medium">
+          No se encontraron especies que coincidan con la búsqueda.
+        </div>
+
+      </div>
+    </section>
+
+    {/* =====================================================================
+         5. MODALES INTERACTIVOS (ASISTENTE IA Y PREVIEW DE FICHA)
+         ===================================================================== */}
+    <AprendeModal />
+    <FichaModal />
+
+    {/* =====================================================================
+         6. PIE DE PÁGINA INSTITUCIONAL Y EDUCATIVO
+         ===================================================================== */}
+    <Footer />
+
+  </main>
+</Layout>
+
+{/* Payload de Datos JSON para interactividad client-side de las 40 especies */}
+<script is:inline type="application/json" id="especiesData" set:html={JSON.stringify(especies).replace(/</g, '\\u003c')}></script>
+
+<script>
+  // ==========================================================================
+  // SCRIPT CLIENTE: CARRUSEL, BÚSQUEDA, MENÚ MÓVIL, CHAT IA Y FICHA RÁPIDA
+  // ==========================================================================
+
+  // 1. Carrusel de la Portada
+  const slides = document.querySelectorAll('.hero-slide');
+  let currentSlide = 0;
+
+  function nextSlide() {
+    if (slides.length === 0) return;
+    slides[currentSlide].classList.remove('opacity-100');
+    slides[currentSlide].classList.add('opacity-0');
+    currentSlide = (currentSlide + 1) % slides.length;
+    slides[currentSlide].classList.remove('opacity-0');
+    slides[currentSlide].classList.add('opacity-100');
+  }
+
+  if (slides.length > 0) {
+    setInterval(nextSlide, 5000);
+  }
+
+  // 2. Búsqueda y Filtrado del Catálogo
+  const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+  const categorySections = document.querySelectorAll('.category-section');
+  const noResults = document.getElementById('noResults');
+  const categoryButtons = document.querySelectorAll('.category-btn');
+
+  let activeCategory = 'Todas';
+
+  function filterSpecies() {
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    let visibleTotal = 0;
+
+    categorySections.forEach((section) => {
+      const sectionCat = (section as HTMLElement).dataset.sectionCat || '';
+      const cards = section.querySelectorAll('.species-card');
+      let sectionVisibleCount = 0;
+
+      cards.forEach((card) => {
+        const htmlCard = card as HTMLElement;
+        const name = htmlCard.dataset.name || '';
+        const scientific = htmlCard.dataset.scientific || '';
+        const category = htmlCard.dataset.category || '';
+
+        const matchesQuery = name.includes(query) || scientific.includes(query);
+        const matchesCategory = activeCategory === 'Todas' || category === activeCategory;
+
+        if (matchesQuery && matchesCategory) {
+          htmlCard.style.display = 'flex';
+          sectionVisibleCount++;
+          visibleTotal++;
+        } else {
+          htmlCard.style.display = 'none';
+        }
+      });
+
+      if (activeCategory !== 'Todas' && sectionCat && sectionCat !== activeCategory) {
+        (section as HTMLElement).style.display = 'none';
+      } else {
+        (section as HTMLElement).style.display = sectionVisibleCount > 0 ? 'block' : 'none';
+      }
+    });
+
+    if (noResults) {
+      if (visibleTotal === 0) {
+        noResults.classList.remove('hidden');
+      } else {
+        noResults.classList.add('hidden');
+      }
+    }
+  }
+
+  searchInput?.addEventListener('input', filterSpecies);
+
+  categoryButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      categoryButtons.forEach((b) => {
+        b.classList.remove('bg-[var(--color-deep,#14301f)]', 'text-white', 'shadow-md');
+        b.classList.add('bg-white', 'text-zinc-700', 'border', 'border-emerald-200', 'shadow-sm');
+      });
+      btn.classList.remove('bg-white', 'text-zinc-700', 'border', 'border-emerald-200', 'shadow-sm');
+      btn.classList.add('bg-[var(--color-deep,#14301f)]', 'text-white', 'shadow-md');
+
+      activeCategory = (btn as HTMLElement).dataset.category || 'Todas';
+      filterSpecies();
+    });
+  });
+
+  // 3. Menú Móvil Desplegable (Drawer)
+  const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+  const mobileDrawer = document.getElementById('mobileDrawer');
+  const mobileDrawerClose = document.getElementById('mobileDrawerClose');
+
+  function toggleMobileDrawer(open: boolean) {
+    if (!mobileDrawer) return;
+    if (open) {
+      mobileDrawer.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      mobileMenuToggle?.setAttribute('aria-expanded', 'true');
+    } else {
+      mobileDrawer.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+      mobileMenuToggle?.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  mobileMenuToggle?.addEventListener('click', () => toggleMobileDrawer(true));
+  mobileDrawerClose?.addEventListener('click', () => toggleMobileDrawer(false));
+  mobileDrawer?.addEventListener('click', (e) => {
+    if (e.target === mobileDrawer) toggleMobileDrawer(false);
+  });
+  document.querySelectorAll('.mobile-nav-link').forEach((link) => {
+    link.addEventListener('click', () => toggleMobileDrawer(false));
+  });
+
+  // 4. Modal y Asistente IA (Aprende)
+  const openAprende = document.getElementById('openAprende');
+  const cardAprendeBtn = document.getElementById('cardAprendeBtn');
+  const aprendeModal = document.getElementById('aprendeModal');
+  const closeAprende = document.getElementById('closeAprende');
+  const clearChat = document.getElementById('clearChat');
+  
+  const chatMessages = document.getElementById('chatMessages');
+  const chatInput = document.getElementById('chatInput') as HTMLInputElement;
+  const sendChat = document.getElementById('sendChat');
+
+  function toggleAprende(show: boolean) {
+    if (!aprendeModal) return;
+    if (show) {
+      aprendeModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => chatInput?.focus(), 100);
+    } else {
+      aprendeModal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+  }
+
+  openAprende?.addEventListener('click', () => toggleAprende(true));
+  cardAprendeBtn?.addEventListener('click', () => toggleAprende(true));
+  document.querySelectorAll('.js-open-aprende').forEach((b) => b.addEventListener('click', () => toggleAprende(true)));
+  closeAprende?.addEventListener('click', () => toggleAprende(false));
+
+  aprendeModal?.addEventListener('click', (e) => {
+    if (e.target === aprendeModal) toggleAprende(false);
+  });
+
+  clearChat?.addEventListener('click', () => {
+    if (!chatMessages) return;
+    chatMessages.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="w-9 h-9 rounded-2xl bg-emerald-700 flex items-center justify-center text-white text-xs shrink-0 shadow-md">🌿</div>
+        <div class="bg-emerald-50/80 border border-emerald-200 p-4 rounded-2xl rounded-tl-sm text-sm text-zinc-800 max-w-[85%] leading-relaxed shadow-sm">
+          ¡Hola! Soy tu asistente del Chocó Andino 🌿 Puedo contarte sobre las especies del catálogo, la reserva y cómo protegerla. Elige una sugerencia o escribe tu pregunta.
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 pl-12 pt-1 pb-2">
+        <button type="button" class="quick-prompt cho-btn bg-white hover:bg-emerald-600 hover:text-white text-emerald-800 border border-emerald-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer" data-pregunta="¿Dónde vive el oso de anteojos y de qué se alimenta?"><span>🐾</span> Oso de anteojos</button>
+        <button type="button" class="quick-prompt cho-btn bg-white hover:bg-emerald-600 hover:text-white text-emerald-800 border border-emerald-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer" data-pregunta="¿Qué aves podemos encontrar en el Chocó Andino?"><span>🕊️</span> Aves del Chocó</button>
+        <button type="button" class="quick-prompt cho-btn bg-white hover:bg-emerald-600 hover:text-white text-emerald-800 border border-emerald-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer" data-pregunta="¿Qué plantas son importantes en este ecosistema?"><span>🌸</span> Flora y plantas</button>
+        <button type="button" class="quick-prompt cho-btn bg-white hover:bg-emerald-600 hover:text-white text-emerald-800 border border-emerald-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer" data-pregunta="¿Cómo podemos ayudar a proteger el Chocó Andino?"><span>🛡️</span> Conservación</button>
+        <button type="button" class="quick-prompt cho-btn bg-white hover:bg-emerald-600 hover:text-white text-emerald-800 border border-emerald-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer" data-pregunta="¿Qué mamíferos habitan en la reserva?"><span>🐾</span> Mamíferos</button>
+        <button type="button" class="quick-prompt cho-btn bg-white hover:bg-emerald-600 hover:text-white text-emerald-800 border border-emerald-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer" data-pregunta="¿Qué anfibios viven en la reserva?"><span>🐸</span> Anfibios</button>
+        <button type="button" class="quick-prompt cho-btn bg-white hover:bg-emerald-600 hover:text-white text-emerald-800 border border-emerald-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer" data-pregunta="¿Qué insectos puedo encontrar en el Chocó Andino?"><span>🦋</span> Insectos</button>
+      </div>
+    `;
+    bindQuickPrompts();
+    reiniciarAsistente();
+  });
+
+  // Motor del Asistente Educativo
+  const PRINCIPALES = ['Aves', 'Mamíferos', 'Anfibios', 'Insectos'];
+  const STOP = ['de', 'la', 'el', 'del', 'los', 'las', 'andino', 'andina', 'gigante'];
+  const nuevoEstado = () => ({
+    especie: null as string | null, categoria: null as string | null, recientes: [] as string[],
+    vistas: {} as Record<string, number>, compartidos: {} as Record<string, string[]>,
+    variantes: {} as Record<string, number>, preguntas: [] as string[], historial: [] as any[], region: 0, turnos: 0
+  });
+  let estadoAsistente = nuevoEstado();
+  function reiniciarAsistente() { estadoAsistente = nuevoEstado(); }
+
+  function normalizar(t: string) {
+    return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function singular(w: string) {
+    if (w.length > 4 && w.endsWith('es')) return w.slice(0, -2);
+    if (w.length > 3 && w.endsWith('s')) return w.slice(0, -1);
+    return w;
+  }
+  const palabras = (n: string) => n.split(' ').filter(Boolean).map(singular);
+  const tiene = (ws: string[], ...claves: string[]) => claves.some((c) => ws.includes(c));
+  const minus1 = (s: string) => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s);
+  const esFlora = (e: any) => !PRINCIPALES.includes(e.data.categoria);
+  const porId = (id: string | null) => especiesData.find((e: any) => e.id === id);
+  const linea = (etq: string, v: any) => (v ? `• ${etq}: ${v}` : '');
+
+  function variar(clave: string, opciones: string[]) {
+    const v = estadoAsistente.variantes;
+    if (v[clave] === undefined) v[clave] = Math.floor(Math.random() * opciones.length) - 1;
+    v[clave] = (v[clave] + 1) % opciones.length;
+    return opciones[v[clave]];
+  }
+  function visto(clave: string) {
+    const c = estadoAsistente.vistas[clave] || 0;
+    estadoAsistente.vistas[clave] = c + 1;
+    return c;
+  }
+  function marcar(id: string, ...campos: string[]) {
+    const c = estadoAsistente.compartidos;
+    c[id] = c[id] || [];
+    campos.forEach((x) => { if (!c[id].includes(x)) c[id].push(x); });
+  }
+  function recordar(id: string) {
+    const r = estadoAsistente.recientes;
+    const i = r.indexOf(id);
+    if (i >= 0) r.splice(i, 1);
+    r.push(id);
+    if (r.length > 4) r.shift();
+  }
+
+  function buscarEspecies(ws: string[]) {
+    const halladas: any[] = [];
+    especiesData.forEach((e: any) => {
+      const d = e.data;
+      const toks = normalizar(d.nombre + ' ' + d.nombreCientifico).split(' ').map(singular).filter((s) => s.length > 2 && !STOP.includes(s));
+      const pos = ws.findIndex((w) => toks.includes(w));
+      if (pos >= 0) halladas.push({ e, pos });
+    });
+    return halladas.sort((a, b) => a.pos - b.pos).map((h) => h.e);
+  }
+
+  function categoriaDe(ws: string[]) {
+    if (tiene(ws, 'ave', 'pajaro', 'colibri')) return 'Aves';
+    if (tiene(ws, 'mamifero')) return 'Mamíferos';
+    if (tiene(ws, 'anfibio')) return 'Anfibios';
+    if (tiene(ws, 'insecto', 'escarabajo')) return 'Insectos';
+    if (tiene(ws, 'planta', 'flora', 'flor', 'orquidea', 'arbol', 'vegetacion', 'bromelia')) return 'Flora';
+    if (tiene(ws, 'animal', 'fauna')) return 'Fauna';
+    return null;
+  }
+
+  const enCategoria = (c: string) => especiesData.filter((e: any) => (c === 'Flora' ? esFlora(e) : c === 'Fauna' ? !esFlora(e) : e.data.categoria === c));
+
+  function explicarEstado(est: string) {
+    const s = normalizar(est || '');
+    if (/datos insuficientes/.test(s)) return 'Todavía no hay información suficiente para evaluar su riesgo de extinción.';
+    if (/\bvu\b|vulnerable/.test(s)) return 'Enfrenta un riesgo alto de extinción en estado silvestre.';
+    if (/\bnt\b|casi amenazado/.test(s)) return 'Está cerca de cumplir los criterios para considerarse amenazada si las presiones continúan.';
+    if (/\blc\b|menor/.test(s)) return 'Es de menor riesgo: por ahora no se la considera amenazada en estado natural.';
+    if (/estable/.test(s)) return 'Se registra en estado poblacional estable.';
+    return '';
+  }
+
+  function fichaTxt(e: any) {
+    const d = e.data;
+    marcar(e.id, 'habitat', 'alimentacion', 'estado', 'cientifico', 'descripcion');
+    const ini = variar('ficha', [`Información sobre **${d.nombre}**`, `Te cuento sobre **${d.nombre}**`, `Ficha de **${d.nombre}**`]);
+    return [`${ini} (*${d.nombreCientifico}*), del grupo ${d.categoria}:`, linea('Hábitat', d.habitat), linea('Alimentación', d.alimentacion), linea('Conservación', d.estadoConservacion), d.descripcion ? `\n${d.descripcion}` : ''].filter(Boolean).join('\n');
+  }
+
+  function habTxt(e: any) {
+    const d = e.data; marcar(e.id, 'habitat');
+    return variar('hab', [`Hábitat de **${d.nombre}**: ${minus1(d.habitat)}.`, `Dónde vive **${d.nombre}**: ${minus1(d.habitat)}.`, `Según el catálogo, el hábitat de **${d.nombre}** es: ${minus1(d.habitat)}.`]);
+  }
+
+  function aliTxt(e: any) {
+    const d = e.data; marcar(e.id, 'alimentacion');
+    return variar('ali', [`Alimentación de **${d.nombre}**: ${minus1(d.alimentacion)}.`, `Sobre la dieta de **${d.nombre}**: ${minus1(d.alimentacion)}.`]);
+  }
+
+  function estTxt(e: any) {
+    const d = e.data; marcar(e.id, 'estado');
+    const exp = explicarEstado(d.estadoConservacion);
+    return `**${d.nombre}** — estado de conservación: **${d.estadoConservacion}**. ${exp}`;
+  }
+
+  function cieTxt(e: any) {
+    const d = e.data; marcar(e.id, 'cientifico');
+    return variar('cie', [`El nombre científico de **${d.nombre}** es *${d.nombreCientifico}*.`, `Científicamente se clasifica como *${d.nombreCientifico}*.`]);
+  }
+
+  const MEDIDAS = [
+    'Visitar la reserva con guías locales y respetar los senderos establecidos.',
+    'Apoyar el ecoturismo comunitario y comprar a productores sostenibles locales.',
+    'No extraer orquídeas, bromelias ni comprar fauna silvestre.',
+    'Evitar plásticos de un solo uso y no dejar residuos en las fuentes hídricas.'
+  ];
+
+  function proTxt(e: any) {
+    const lista = MEDIDAS.slice(0, 3).map((m) => `• ${m}`).join('\n');
+    const para = e ? `**${e.data.nombre}**` : 'el Chocó Andino';
+    return `Formas de contribuir a proteger ${e ? 'a ' : ''}${para}:\n${lista}`;
+  }
+
+  function listaTxt(cat: string) {
+    const lista = enCategoria(cat);
+    const nombre = cat === 'Fauna' ? 'animales' : cat === 'Flora' ? 'plantas' : cat.toLowerCase();
+    if (!lista.length) return `Por ahora no tengo especies de ${nombre} registradas.`;
+    const items = lista.map((e: any) => `• **${e.data.nombre}** (*${e.data.nombreCientifico}*)`).join('\n');
+    return `Especies de ${nombre} en el catálogo:\n${items}\n\nPregúntame por cualquiera para ver sus detalles.`;
+  }
+
+  function generarRespuesta(texto: string): { texto: string; chips: string[] } {
+    const E = estadoAsistente;
+    const n = normalizar(texto);
+    if (!n) return { texto: 'Escríbeme una pregunta sobre el Chocó Andino o elige una de las sugerencias.', chips: ['Oso de anteojos', 'Aves del Chocó', 'Conservación'] };
+    const ws = palabras(n);
+    E.turnos++;
+
+    const fl = {
+      ali: /\b(come|comen|comer|comida|aliment\w*|dieta)\b/.test(n),
+      hab: /\b(vive|viven|vivir|habita\w*|donde)\b/.test(n),
+      est: /\b(peligro|amenaz\w*|riesgo|extin\w*|estado|uicn)\b/.test(n),
+      pro: /\b(proteg\w*|ayud\w*|cuid\w*|salv\w*)\b/.test(n),
+      cie: /\bcientific\w*/.test(n)
+    };
+
+    const sp = buscarEspecies(ws);
+    const cat = categoriaDe(ws);
+
+    if (sp.length) {
+      const e = sp[0];
+      recordar(e.id);
+      let t = '';
+      if (fl.cie) t = cieTxt(e);
+      else if (fl.hab) t = habTxt(e);
+      else if (fl.ali) t = aliTxt(e);
+      else if (fl.est) t = estTxt(e);
+      else if (fl.pro) t = proTxt(e);
+      else t = fichaTxt(e);
+      return { texto: t, chips: [`¿Dónde vive ${e.data.nombre}?`, `¿De qué se alimenta?`, '¿Cómo protegerlo?'] };
+    }
+
+    if (cat) {
+      return { texto: listaTxt(cat), chips: ['¿Cómo podemos ayudar?', 'Oso de anteojos', 'Flora del bosque'] };
+    }
+
+    if (fl.pro) {
+      return { texto: proTxt(null), chips: ['Aves del Chocó', 'Oso de anteojos', 'Flora y plantas'] };
+    }
+
+    return {
+      texto: 'El Chocó Andino de Pichincha es una Reserva de la Biosfera de la UNESCO con más de 286 mil hectáreas. Puedes preguntarme sobre aves, mamíferos, anfibios, insectos, flora o cómo ayudar a conservarlos.',
+      chips: ['Oso de anteojos', 'Aves del Chocó', 'Conservación']
+    };
+  }
+
+  let asistenteOcupado = false;
+
+  function escaparHTML(t: string) {
+    return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function formatearRespuesta(t: string) {
+    return escaparHTML(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
+  }
+
+  function mostrarEscribiendo() {
+    if (!chatMessages) return;
+    const d = document.createElement('div');
+    d.id = 'asistenteEscribiendo';
+    d.className = 'flex items-start gap-3';
+    d.innerHTML = `
+      <div class="w-9 h-9 rounded-2xl bg-emerald-700 flex items-center justify-center text-white text-xs shrink-0 shadow-md">🌿</div>
+      <div class="cho-dots bg-emerald-50/80 border border-emerald-200 px-4 py-4 rounded-2xl rounded-tl-sm shadow-sm" role="status"><span></span><span></span><span></span></div>
+    `;
+    chatMessages.appendChild(d);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  function quitarEscribiendo() { document.getElementById('asistenteEscribiendo')?.remove(); }
+
+  function agregarMensajeIA(texto: string, chips: string[]) {
+    if (!chatMessages) return;
+    document.querySelectorAll('.chips-dinamicos').forEach((el) => el.remove());
+    const aiMsgDiv = document.createElement('div');
+    aiMsgDiv.className = 'flex items-start gap-3';
+    aiMsgDiv.innerHTML = `
+      <div class="w-9 h-9 rounded-2xl bg-emerald-700 flex items-center justify-center text-white text-xs shrink-0 shadow-md">🌿</div>
+      <div class="bg-emerald-50/80 border border-emerald-200 p-4 rounded-2xl rounded-tl-sm text-sm text-zinc-800 max-w-[85%] leading-relaxed shadow-sm break-words">
+        ${formatearRespuesta(texto)}
+      </div>
+    `;
+    chatMessages.appendChild(aiMsgDiv);
+
+    if (chips.length) {
+      const fila = document.createElement('div');
+      fila.className = 'chips-dinamicos flex flex-wrap gap-2 pl-12 pt-1 pb-1';
+      chips.forEach((c) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'quick-prompt cho-btn bg-white hover:bg-emerald-600 hover:text-white text-emerald-800 border border-emerald-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm cursor-pointer text-left';
+        b.dataset.pregunta = c;
+        b.textContent = c;
+        fila.appendChild(b);
+      });
+      chatMessages.appendChild(fila);
+      bindQuickPrompts();
+    }
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  async function processQuery(text: string) {
+    if (!chatMessages || asistenteOcupado) return;
+    asistenteOcupado = true;
+
+    const userMsgDiv = document.createElement('div');
+    userMsgDiv.className = 'flex items-start gap-3 justify-end';
+    userMsgDiv.innerHTML = `
+      <div class="bg-[#0b3824] text-white p-4 rounded-2xl rounded-tr-sm text-sm max-w-[85%] leading-relaxed shadow-md">
+        ${escaparHTML(text)}
+      </div>
+      <div class="w-9 h-9 rounded-2xl bg-zinc-700 flex items-center justify-center text-white text-xs shrink-0 shadow-md">👤</div>
+    `;
+    chatMessages.appendChild(userMsgDiv);
+    if (chatInput) chatInput.value = '';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    mostrarEscribiendo();
+
+    try {
+      const { texto: respuesta, chips } = generarRespuesta(text);
+      await new Promise((ok) => setTimeout(ok, 500));
+      quitarEscribiendo();
+      agregarMensajeIA(respuesta, chips);
+    } finally {
+      quitarEscribiendo();
+      asistenteOcupado = false;
+    }
+  }
+
+  function handleSendMessage() {
+    if (!chatInput) return;
+    const text = chatInput.value.trim();
+    if (!text) return;
+    processQuery(text);
+  }
+
+  function bindQuickPrompts() {
+    document.querySelectorAll('.quick-prompt').forEach((btn) => {
+      if ((btn as HTMLElement).dataset.bound) return;
+      (btn as HTMLElement).dataset.bound = '1';
+      btn.addEventListener('click', () => {
+        const preguntaFija = (btn as HTMLElement).dataset.pregunta;
+        if (preguntaFija) {
+          processQuery(preguntaFija);
+        } else {
+          const promptText = btn.textContent?.trim().replace(/^[^\w\s]+/, '').trim();
+          if (promptText) processQuery(`¿Dónde vive el ${promptText.toLowerCase()}?`);
+        }
+      });
+    });
+  }
+
+  bindQuickPrompts();
+  sendChat?.addEventListener('click', handleSendMessage);
+  chatInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') handleSendMessage();
+  });
+
+  // 5. Previsualización Rápida de Especie (FichaModal)
+  const especiesData: any[] = JSON.parse(document.getElementById('especiesData')?.textContent || '[]');
+  const fichaModal = document.getElementById('fichaModal');
+  const fichaImg = document.getElementById('fichaImg') as HTMLImageElement | null;
+  const fichaLink = document.getElementById('fichaLink') as HTMLAnchorElement | null;
+  const fichaDescripcion = document.getElementById('fichaDescripcion');
+  let fichaOrigen: HTMLElement | null = null;
+
+  function setF(campo: string, texto: string) {
+    fichaModal?.querySelectorAll(`[data-f="${campo}"]`).forEach((el) => { el.textContent = texto; });
+  }
+
+  function tonoConservacion(t: string) {
+    const s = t.toLowerCase();
+    if (s.includes('vulnerable') || s.includes('peligro') || s.includes('(vu)')) return 'riesgo';
+    if (s.includes('casi amenazado') || s.includes('(nt)')) return 'alerta';
+    if (s.includes('menor') || s.includes('estable') || s.includes('(lc)')) return 'ok';
+    return 'neutro';
+  }
+
+  function abrirFicha(id: string, origen?: HTMLElement) {
+    const esp = especiesData.find((e) => e.id === id);
+    if (!esp || !fichaModal) return;
+    const d = esp.data;
+    fichaOrigen = origen || null;
+    setF('nombre', d.nombre);
+    setF('cientifico', d.nombreCientifico);
+    setF('categoria', d.categoria);
+    setF('estado', d.estadoConservacion);
+    setF('habitat', d.habitat);
+    setF('alimentacion', d.alimentacion);
+    fichaModal.querySelector('[data-f="estado"]')?.setAttribute('data-tono', tonoConservacion(d.estadoConservacion || ''));
+    if (fichaImg) { fichaImg.src = d.imagen; fichaImg.alt = d.altImagen || d.nombre; }
+    if (fichaLink) fichaLink.href = `/especies/${esp.id}`;
+    if (fichaDescripcion) {
+      fichaDescripcion.textContent = d.descripcion || 'Descubre la distribución geográfica, hábitat y mapa de condiciones potenciales en la ficha completa.';
+    }
+    fichaModal.classList.add('is-open');
+    fichaModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('fichaClose')?.focus(), 50);
+  }
+
+  function cerrarFicha() {
+    if (!fichaModal) return;
+    fichaModal.classList.remove('is-open');
+    fichaModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = 'auto';
+    fichaOrigen?.focus();
+  }
+
+  document.querySelectorAll('.species-card').forEach((card) => {
+    card.addEventListener('click', (e) => {
+      const ev = e as MouseEvent;
+      if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey || ev.button !== 0) return;
+      const target = ev.target as HTMLElement | null;
+      if (target?.closest('.btn-ficha-completa')) {
+        return; // Navega directamente al enlace /especies/[slug]
+      }
+      const id = (card as HTMLElement).dataset.id;
+      if (!id) return;
+      ev.preventDefault();
+      abrirFicha(id, card as HTMLElement);
+    });
+  });
+
+  document.getElementById('fichaClose')?.addEventListener('click', cerrarFicha);
+  document.getElementById('fichaVolver')?.addEventListener('click', cerrarFicha);
+  fichaModal?.addEventListener('click', (e) => { if (e.target === fichaModal) cerrarFicha(); });
+  document.addEventListener('keydown', (e) => {
+    if (!fichaModal?.classList.contains('is-open')) return;
+    if (e.key === 'Escape') cerrarFicha();
+  });
+</script>

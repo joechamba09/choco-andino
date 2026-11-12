@@ -1,0 +1,495 @@
+---
+// src/components/MapaDistribucion.astro
+// Componente de mapa interactivo individual de distribución potencial con Leaflet y OpenStreetMap
+import type { DistribucionPotencialData } from '../data/distribucionPotencial';
+
+interface Props {
+  distribucion: DistribucionPotencialData;
+  nombreComun: string;
+  nombreCientifico: string;
+  categoria: string;
+  slug: string;
+  rangoAltitudinal?: string;
+  habitat?: string;
+  distribucionGeografica?: string;
+}
+
+const {
+  distribucion,
+  nombreComun,
+  nombreCientifico,
+  categoria,
+  slug,
+  rangoAltitudinal,
+  habitat,
+  distribucionGeografica
+} = Astro.props;
+
+const mapContainerId = `mapa-distribucion-${slug}`;
+const esValidado = distribucion.estadoValidacion === 'validado';
+const cantRegistros = distribucion.registrosPresencia ? distribucion.registrosPresencia.length : 0;
+
+// Serializar datos para consumo en cliente de forma segura
+const mapConfigJson = JSON.stringify({
+  mapContainerId,
+  nombreComun,
+  nombreCientifico,
+  categoria,
+  centroMapa: distribucion.centroMapa || [0.065, -78.710],
+  zoomInicial: distribucion.zoomInicial || 11,
+  zonas: distribucion.zonas || [],
+  registrosPresencia: distribucion.registrosPresencia || [],
+  estadoValidacion: distribucion.estadoValidacion
+});
+---
+
+<!-- Hoja de estilos de Leaflet -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""
+/>
+
+<div class="space-y-6 w-full">
+  
+  {/* Encabezado contextual con explicación bioclimática y hábitat */}
+  <div class="bg-white border border-emerald-200/90 rounded-3xl p-6 sm:p-8 space-y-4 shadow-md relative overflow-hidden">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-100 pb-4">
+      <div>
+        <span class="text-[11px] font-black uppercase tracking-widest text-[var(--cho-forest,#1e4d36)] flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/><path d="M2 12h20"/>
+          </svg>
+          Biorregión del Chocó Andino &middot; Modelado de Nicho Ecológico
+        </span>
+        <h3 class="text-xl sm:text-2xl font-black text-[var(--cho-deep,#14301f)] mt-1">
+          Distribución Potencial de {nombreComun}
+        </h3>
+        <p class="font-serif italic text-sm text-[var(--cho-green,#2e7d52)] font-semibold">
+          {nombreCientifico}
+        </p>
+      </div>
+
+      {/* Badge de validación científica */}
+      <div class="flex items-center gap-2">
+        {esValidado ? (
+          <span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black px-3.5 py-1.5 rounded-xl shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+            Modelo Bioclimático Validado
+          </span>
+        ) : (
+          <span class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-950 border border-amber-300 text-xs font-black px-3.5 py-1.5 rounded-xl shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-amber-600"></span>
+            En Proceso de Validación
+          </span>
+        )}
+      </div>
+    </div>
+
+    {/* Explicación de la distribución geográfica y hábitat */}
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 text-sm text-zinc-700 leading-relaxed pt-1">
+      <div class="md:col-span-7 space-y-2">
+        <h4 class="text-xs font-black uppercase tracking-wider text-[var(--cho-deep,#14301f)] flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[var(--cho-green,#2e7d52)]"></span>
+          Distribución Geográfica y Hábitat en Ecuador
+        </h4>
+        <p class="font-normal text-zinc-700">
+          {distribucion.resumenDistribucion || `Distribución adaptada al gradiente altitudinal de la vertiente occidental del Chocó Andino de Pichincha.`}
+        </p>
+        <p class="text-xs text-zinc-600">
+          {distribucion.explicacionHabitat || `Habita en microclimas de bosque nublado con alta humedad relativa y condensación de neblina continua.`}
+        </p>
+      </div>
+
+      {/* Tarjetas de parámetros ambientales */}
+      <div class="md:col-span-5 grid grid-cols-2 gap-2.5 text-xs">
+        <div class="bg-stone-50 border border-emerald-100 p-3 rounded-2xl">
+          <span class="text-[10px] uppercase font-bold text-zinc-500 block">Rango Óptimo</span>
+          <strong class="text-[var(--cho-deep,#14301f)] font-bold block mt-0.5">{distribucion.rangoOptimo || rangoAltitudinal || '1.200 - 2.200 m s.n.m.'}</strong>
+        </div>
+        <div class="bg-stone-50 border border-emerald-100 p-3 rounded-2xl">
+          <span class="text-[10px] uppercase font-bold text-zinc-500 block">Precipitación Anual</span>
+          <strong class="text-[var(--cho-deep,#14301f)] font-bold block mt-0.5">{distribucion.precipitacionAnual || '2.200 - 3.800 mm'}</strong>
+        </div>
+        <div class="bg-stone-50 border border-emerald-100 p-3 rounded-2xl">
+          <span class="text-[10px] uppercase font-bold text-zinc-500 block">Temperatura Media</span>
+          <strong class="text-[var(--cho-deep,#14301f)] font-bold block mt-0.5">{distribucion.temperaturaMedia || '14 - 20 °C'}</strong>
+        </div>
+        <div class="bg-stone-50 border border-emerald-100 p-3 rounded-2xl">
+          <span class="text-[10px] uppercase font-bold text-zinc-500 block">Registros de Campo</span>
+          <strong class="text-[var(--cho-forest,#1e4d36)] font-black block mt-0.5">{cantRegistros} {cantRegistros === 1 ? 'punto confirmado' : 'puntos confirmados'}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Contenedor del Mapa Interactivo y Controles */}
+  <div class="bg-white border-2 border-emerald-900/15 rounded-[32px] p-3 sm:p-5 shadow-2xl space-y-4 relative overflow-hidden">
+    
+    {/* Barra de herramientas superior del mapa */}
+    <div class="flex flex-wrap items-center justify-between gap-3 px-2 py-1 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-[var(--cho-deep,#14301f)] flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          Visor Cartográfico Interactivo
+        </span>
+        <span class="text-zinc-400">|</span>
+        <span class="text-zinc-500 hidden sm:inline">Desplázate y haz zoom sobre las zonas bioclimáticas</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          id={`btn-reset-${slug}`}
+          class="bg-emerald-50 hover:bg-emerald-100 text-[var(--cho-forest,#1e4d36)] font-bold px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors inline-flex items-center gap-1 text-[11px] shadow-sm cursor-pointer"
+          title="Centrar mapa en la distribución de la especie"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+          </svg>
+          Centrar Especie
+        </button>
+      </div>
+    </div>
+
+    {/* Elemento contenedor donde Leaflet renderizará el mapa */}
+    <div class="relative w-full rounded-2xl md:rounded-[24px] overflow-hidden border border-emerald-900/20 bg-stone-100 shadow-inner">
+      <div
+        id={mapContainerId}
+        class="w-full h-[400px] sm:h-[480px] md:h-[540px] z-0 focus:outline-none"
+        style="min-height: 400px;"
+      ></div>
+
+      {/* Marca de agua institucional elegante en la esquina inferior */}
+      <div class="absolute bottom-2 left-2 z-[400] bg-white/90 backdrop-blur-md px-3 py-1 rounded-xl border border-emerald-200/80 text-[10px] font-bold text-[var(--cho-forest,#1e4d36)] shadow-sm pointer-events-none hidden sm:flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-[var(--cho-green,#2e7d52)]"></span>
+        Chocó Andino &middot; {nombreComun}
+      </div>
+    </div>
+
+    {/* Leyenda interactiva y Conmutador de Capas */}
+    <div class="bg-gradient-to-r from-stone-50 via-emerald-50/40 to-stone-50 border border-emerald-200/80 rounded-2xl p-4 sm:p-5 space-y-3.5">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-100 pb-2">
+        <h4 class="text-xs font-black uppercase tracking-wider text-[var(--cho-deep,#14301f)] flex items-center gap-2">
+          <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+          </svg>
+          Leyenda del Modelo de Idoneidad Bioclimática
+        </h4>
+        <span class="text-[11px] text-zinc-500 font-medium">Haz clic en los filtros para activar o desactivar capas</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+        
+        {/* Capa Verde: Alta Idoneidad */}
+        <label class="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-emerald-300 shadow-sm cursor-pointer hover:border-emerald-500 transition-colors">
+          <input
+            type="checkbox"
+            id={`toggle-alta-${slug}`}
+            checked
+            class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+          />
+          <div class="space-y-0.5">
+            <span class="flex items-center gap-1.5 font-bold text-emerald-950">
+              <span class="w-3.5 h-3.5 rounded-md bg-[#2e7d32] border border-[#1b5e20] shrink-0"></span>
+              Condición Favorable
+            </span>
+            <p class="text-[10px] text-zinc-600 leading-tight">
+              Alta idoneidad: clima, altitud y vegetación óptimos para la especie.
+            </p>
+          </div>
+        </label>
+
+        {/* Capa Amarilla: Idoneidad Intermedia */}
+        <label class="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-amber-300 shadow-sm cursor-pointer hover:border-amber-500 transition-colors">
+          <input
+            type="checkbox"
+            id={`toggle-media-${slug}`}
+            checked
+            class="mt-0.5 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+          />
+          <div class="space-y-0.5">
+            <span class="flex items-center gap-1.5 font-bold text-amber-950">
+              <span class="w-3.5 h-3.5 rounded-md bg-[#f59e0b] border border-[#b45309] shrink-0"></span>
+              Condición Intermedia
+            </span>
+            <p class="text-[10px] text-zinc-600 leading-tight">
+              Idoneidad moderada: ecotonos, bordes y corredores de paso.
+            </p>
+          </div>
+        </label>
+
+        {/* Capa Roja: Poco Favorable / Marginal */}
+        <label class="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-rose-300 shadow-sm cursor-pointer hover:border-rose-500 transition-colors">
+          <input
+            type="checkbox"
+            id={`toggle-baja-${slug}`}
+            checked
+            class="mt-0.5 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+          />
+          <div class="space-y-0.5">
+            <span class="flex items-center gap-1.5 font-bold text-rose-950">
+              <span class="w-3.5 h-3.5 rounded-md bg-[#dc2626] border border-[#991b1b] shrink-0"></span>
+              Poco Favorable
+            </span>
+            <p class="text-[10px] text-zinc-600 leading-tight">
+              Baja idoneidad o límites marginales de tolerancia bioclimática.
+            </p>
+          </div>
+        </label>
+
+        {/* Marcadores de Presencia Confirmada */}
+        <label class="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-emerald-400 shadow-sm cursor-pointer hover:border-emerald-600 transition-colors">
+          <input
+            type="checkbox"
+            id={`toggle-presencia-${slug}`}
+            checked
+            class="mt-0.5 rounded text-emerald-800 focus:ring-emerald-700 cursor-pointer"
+          />
+          <div class="space-y-0.5">
+            <span class="flex items-center gap-1.5 font-bold text-[var(--cho-deep,#14301f)]">
+              <span class="w-3.5 h-3.5 rounded-full bg-emerald-700 border-2 border-white shadow-sm flex items-center justify-center text-[8px] text-white shrink-0 font-black">●</span>
+              Presencia Confirmada
+            </span>
+            <p class="text-[10px] text-zinc-600 leading-tight">
+              Registros validados en campo, museos, fototrampeo y monitoreo.
+            </p>
+          </div>
+        </label>
+
+      </div>
+    </div>
+
+  </div>
+
+  {/* Aviso de Rigor Científico y Diferenciación Metodológica */}
+  <div class="bg-gradient-to-r from-[#f7f4ec] to-[#eef6f0] border border-emerald-200/90 rounded-2xl p-5 text-xs text-zinc-700 space-y-2 shadow-sm">
+    <div class="flex items-center gap-2 font-black text-[var(--cho-forest,#1e4d36)] uppercase tracking-wider text-[11px]">
+      <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+      </svg>
+      Nota Metodológica &middot; Rigor de Datos de Biodiversidad
+    </div>
+    <p class="leading-relaxed text-zinc-700 font-normal">
+      {distribucion.notaMetodologica || 'Este mapa diferencia explícitamente entre registros puntuales confirmados de presencia en colecciones biológicas y la estimación de idoneidad ambiental potencial calculada mediante envolventes bioclimáticas.'}
+    </p>
+    <div class="flex flex-wrap items-center gap-4 pt-1 text-[11px] text-zinc-600 border-t border-emerald-100">
+      <span><strong>Fuentes de validación:</strong> INABIO, BioWeb Ecuador, QCAZ, MECN, QCNE y Red de Reservas Privadas del Chocó Andino.</span>
+      <span><strong>Datum Geográfico:</strong> WGS 84 &middot; Cobertura OpenStreetMap.</span>
+    </div>
+  </div>
+
+</div>
+
+{/* Script cliente para inicializar Leaflet de forma interactiva y resiliente */}
+<script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script is:inline define:vars={{ mapConfigJson }}>
+  (function () {
+    const config = JSON.parse(mapConfigJson);
+    const containerId = config.mapContainerId;
+
+    function initMap() {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      // Evitar doble inicialización si ya existe la instancia
+      if (container._leaflet_id) {
+        return;
+      }
+
+      if (typeof window.L === 'undefined') {
+        console.warn('Leaflet aún no está disponible, reintentando...');
+        setTimeout(initMap, 200);
+        return;
+      }
+
+      const L = window.L;
+
+      // 1. Inicializar el mapa centrado en las coordenadas específicas de esta especie
+      const map = L.map(containerId, {
+        center: config.centroMapa,
+        zoom: config.zoomInicial,
+        scrollWheelZoom: false, // Evita secuestrar el scroll en móviles
+        zoomControl: true,
+        attributionControl: true
+      });
+
+      // 2. Capa base OpenStreetMap
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors &middot; Chocó Andino'
+      }).addTo(map);
+
+      // Grupos de capas para control y alternancia
+      const layerGroupAlta = L.layerGroup().addTo(map);
+      const layerGroupMedia = L.layerGroup().addTo(map);
+      const layerGroupBaja = L.layerGroup().addTo(map);
+      const layerGroupPresencia = L.layerGroup().addTo(map);
+
+      // 3. Renderizar polígonos de zonas bioclimáticas
+      if (Array.isArray(config.zonas)) {
+        config.zonas.forEach(function (zona) {
+          if (!zona.coordenadas || zona.coordenadas.length === 0) return;
+
+          const poly = L.polygon(zona.coordenadas, {
+            color: zona.borde || zona.color,
+            weight: zona.nivel === 'alta' ? 2 : 1.5,
+            opacity: 0.9,
+            fillColor: zona.color,
+            fillOpacity: zona.opacidad || 0.35,
+            smoothFactor: 1.2
+          });
+
+          // Popup informativo para la zona
+          poly.bindPopup(`
+            <div style="font-family: system-ui, -apple-system, sans-serif; padding: 4px; font-size: 12px; line-height: 1.4; max-width: 240px;">
+              <strong style="color: ${zona.color}; font-size: 13px; display: block; margin-bottom: 4px;">
+                ${zona.nombre}
+              </strong>
+              <p style="margin: 0; color: #374151;">
+                ${zona.descripcion}
+              </p>
+              <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #6b7280;">
+                Especie: <em>${config.nombreCientifico}</em>
+              </div>
+            </div>
+          `);
+
+          if (zona.nivel === 'alta') {
+            layerGroupAlta.addLayer(poly);
+          } else if (zona.nivel === 'media') {
+            layerGroupMedia.addLayer(poly);
+          } else if (zona.nivel === 'baja') {
+            layerGroupBaja.addLayer(poly);
+          }
+        });
+      }
+
+      // 4. Marcadores personalizados para registros de presencia confirmados
+      const markerIcon = L.divIcon({
+        className: 'custom-presence-marker',
+        html: `
+          <div style="
+            width: 22px;
+            height: 22px;
+            background: #14301f;
+            border: 2.5px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d4a63a;
+            font-size: 10px;
+            font-weight: 900;
+          ">
+            ●
+          </div>
+        `,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+        popupAnchor: [0, -12]
+      });
+
+      if (Array.isArray(config.registrosPresencia)) {
+        config.registrosPresencia.forEach(function (reg) {
+          if (typeof reg.lat !== 'number' || typeof reg.lng !== 'number') return;
+
+          const marker = L.marker([reg.lat, reg.lng], { icon: markerIcon });
+
+          const popupHtml = `
+            <div style="font-family: system-ui, -apple-system, sans-serif; padding: 6px; font-size: 12px; line-height: 1.45; min-width: 220px; max-width: 280px;">
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <span style="background: #e8f5e9; color: #1b5e20; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; border: 1px solid #c8e6c9; text-transform: uppercase;">
+                  Registro Confirmado
+                </span>
+                <span style="font-size: 11px; color: #6b7280; font-weight: 600;">${reg.altitud || ''}</span>
+              </div>
+              <strong style="color: #14301f; font-size: 13px; display: block; margin-bottom: 2px;">
+                ${reg.localidad}
+              </strong>
+              <div style="font-style: italic; color: #2e7d52; font-size: 11px; margin-bottom: 6px;">
+                ${config.nombreComun} (${config.nombreCientifico})
+              </div>
+              ${reg.detalles ? `<p style="margin: 0 0 6px 0; color: #374151; font-size: 11px;">${reg.detalles}</p>` : ''}
+              <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #6b7280;">
+                <strong>Fuente:</strong> ${reg.fuente || 'Monitoreo de Campo'}
+                ${reg.tipoRegistro ? `<br><strong>Tipo:</strong> ${reg.tipoRegistro}` : ''}
+              </div>
+            </div>
+          `;
+
+          marker.bindPopup(popupHtml);
+          layerGroupPresencia.addLayer(marker);
+        });
+      }
+
+      // 5. Vincular toggles de la leyenda interactiva
+      const slug = containerId.replace('mapa-distribucion-', '');
+      const toggleAlta = document.getElementById('toggle-alta-' + slug);
+      const toggleMedia = document.getElementById('toggle-media-' + slug);
+      const toggleBaja = document.getElementById('toggle-baja-' + slug);
+      const togglePresencia = document.getElementById('toggle-presencia-' + slug);
+
+      if (toggleAlta) {
+        toggleAlta.addEventListener('change', function () {
+          if (this.checked) map.addLayer(layerGroupAlta);
+          else map.removeLayer(layerGroupAlta);
+        });
+      }
+
+      if (toggleMedia) {
+        toggleMedia.addEventListener('change', function () {
+          if (this.checked) map.addLayer(layerGroupMedia);
+          else map.removeLayer(layerGroupMedia);
+        });
+      }
+
+      if (toggleBaja) {
+        toggleBaja.addEventListener('change', function () {
+          if (this.checked) map.addLayer(layerGroupBaja);
+          else map.removeLayer(layerGroupBaja);
+        });
+      }
+
+      if (togglePresencia) {
+        togglePresencia.addEventListener('change', function () {
+          if (this.checked) map.addLayer(layerGroupPresencia);
+          else map.removeLayer(layerGroupPresencia);
+        });
+      }
+
+      // Botón para centrar y reenfocar
+      const resetBtn = document.getElementById('btn-reset-' + slug);
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+          map.setView(config.centroMapa, config.zoomInicial, { animate: true });
+        });
+      }
+
+      // Habilitar zoom de rueda al hacer clic sobre el mapa
+      container.addEventListener('click', function () {
+        map.scrollWheelZoom.enable();
+      });
+
+      // Asegurar redimensionamiento correcto cuando se renderiza o cambia la pantalla
+      setTimeout(function () {
+        map.invalidateSize();
+      }, 400);
+
+      window.addEventListener('resize', function () {
+        map.invalidateSize();
+      });
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(initMap, 100);
+    } else {
+      document.addEventListener('DOMContentLoaded', initMap);
+    }
+  })();
+</script>

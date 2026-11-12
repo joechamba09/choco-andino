@@ -1,0 +1,87 @@
+---
+// src/components/Territorio.astro
+// Sección informativa sobre el territorio y la Reserva de la Biosfera del Chocó Andino
+const ic = {
+  mountain: '<path d="m8 3 4 8 5-5 5 15H2L8 3z"/>',
+  bird: '<path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20"/><path d="m20 7 2 .5-2 .5"/><path d="M10 18v3"/><path d="M14 17.75V21"/><path d="M7 18a6 6 0 0 0 3.84-10.61"/>',
+  tree: '<path d="M12 22v-6"/><path d="M12 16a5 5 0 0 0 5-5 4 4 0 0 0-2-6 4 4 0 0 0-6 0 4 4 0 0 0-2 6 5 5 0 0 0 5 5z"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>'
+};
+---
+
+<!-- 2. SECCIÓN TERRITORIO E IMPORTANCIA ECOLÓGICA -->
+<section class="w-full bg-[var(--color-surface-alt,#f1ecd9)] pt-16 pb-28 px-6 md:px-12 lg:px-16 border-b border-emerald-200 relative overflow-hidden z-10 shadow-sm">
+  {/* Silueta botánica decorativa de fondo */}
+  <svg class="absolute -top-6 -right-10 w-64 h-64 text-[var(--color-sage,#8fb39b)] opacity-20 rotate-[20deg] pointer-events-none" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c2 2 2.6 3.5 3.7 9.2A7 7 0 0 1 11 20z"/>
+  </svg>
+
+  <div class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
+    
+    {/* Columna de Texto Descriptivo */}
+    <div class="lg:col-span-6 space-y-6">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-accent-soft,#f6e7b8)] border border-[var(--color-accent,#d4a63a)]/60 text-[var(--color-deep,#14301f)] text-xs font-black uppercase tracking-wider">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.mountain}></svg> 
+        <span>Santuario Ecológico Andino</span>
+      </div>
+
+      <h2 class="text-3xl md:text-4xl font-black text-[var(--color-ink,#1b2a22)] border-l-4 border-[var(--color-accent,#d4a63a)] pl-4 leading-tight">
+        El territorio y su importancia vital
+      </h2>
+
+      <p class="text-zinc-700 text-base leading-relaxed">
+        Ubicado en el noroccidente de Quito, abarca más de 286 mil hectáreas de refugio ecológico desde los altos páramos andinos hasta la exuberante selva subtropical.
+      </p>
+
+      <p class="text-zinc-700 text-base leading-relaxed">
+        Es el hogar indispensable del oso andino, cientos de aves endémicas y comunidades locales dedicadas a la conservación sostenible y protección de fuentes hídricas.
+      </p>
+    </div>
+
+    {/* Columna de Métricas Clave (Tarjetas de Impacto) */}
+    <div class="lg:col-span-6 grid grid-cols-2 gap-4 md:gap-5">
+      
+      {/* Métrica 1: Hectáreas */}
+      <div class="cho-card bg-white p-5 md:p-6 rounded-3xl border border-emerald-200 text-center shadow-md hover:shadow-xl hover:border-[var(--color-secondary,#2e7d52)] transition-all group">
+        <span class="mx-auto mb-2 w-9 h-9 rounded-full bg-emerald-100 text-[var(--color-primary,#1e4d36)] flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.mountain}></svg>
+        </span>
+        <span class="block text-3xl md:text-4xl font-black text-[var(--color-primary,#1e4d36)] mb-1 group-hover:scale-105 transition-transform">+286k</span>
+        <span class="text-xs md:text-sm text-zinc-700 font-bold">Hectáreas Protegidas</span>
+      </div>
+
+      {/* Métrica 2: Aves */}
+      <div class="cho-card bg-white p-5 md:p-6 rounded-3xl border border-emerald-200 text-center shadow-md hover:shadow-xl hover:border-[var(--color-secondary,#2e7d52)] transition-all group">
+        <span class="mx-auto mb-2 w-9 h-9 rounded-full bg-emerald-100 text-[var(--color-primary,#1e4d36)] flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.bird}></svg>
+        </span>
+        <span class="block text-3xl md:text-4xl font-black text-[var(--color-primary,#1e4d36)] mb-1 group-hover:scale-105 transition-transform">270+</span>
+        <span class="text-xs md:text-sm text-zinc-700 font-bold">Especies de Aves</span>
+      </div>
+
+      {/* Métrica 3: Parroquias */}
+      <div class="cho-card bg-white p-5 md:p-6 rounded-3xl border border-emerald-200 text-center shadow-md hover:shadow-xl hover:border-[var(--color-secondary,#2e7d52)] transition-all group">
+        <span class="mx-auto mb-2 w-9 h-9 rounded-full bg-emerald-100 text-[var(--color-primary,#1e4d36)] flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.tree}></svg>
+        </span>
+        <span class="block text-3xl md:text-4xl font-black text-[var(--color-primary,#1e4d36)] mb-1 group-hover:scale-105 transition-transform">6</span>
+        <span class="text-xs md:text-sm text-zinc-700 font-bold">Parroquias Rurales</span>
+      </div>
+
+      {/* Métrica 4: UNESCO */}
+      <div class="cho-card bg-white p-5 md:p-6 rounded-3xl border border-emerald-200 text-center shadow-md hover:shadow-xl hover:border-[var(--color-secondary,#2e7d52)] transition-all group">
+        <span class="mx-auto mb-2 w-9 h-9 rounded-full bg-[var(--color-accent-soft,#f6e7b8)] text-[var(--color-deep,#14301f)] flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ic.globe}></svg>
+        </span>
+        <span class="block text-3xl md:text-4xl font-black text-[var(--color-primary,#1e4d36)] mb-1 group-hover:scale-105 transition-transform">UNESCO</span>
+        <span class="text-xs md:text-sm text-zinc-700 font-bold">Reserva de Biosfera</span>
+      </div>
+
+    </div>
+  </div>
+
+  {/* Divisor ondulado inferior hacia el catálogo */}
+  <svg class="absolute bottom-0 left-0 w-full h-12 md:h-20 text-[var(--color-background,#faf6ea)] pointer-events-none" viewBox="0 0 1440 80" preserveAspectRatio="none" fill="currentColor" aria-hidden="true">
+    <path d="M0 44 C 220 92, 460 0, 720 34 C 980 68, 1200 92, 1440 30 V80 H0 Z" />
+  </svg>
+</section>

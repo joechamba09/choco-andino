@@ -1,0 +1,680 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { verifySession } from '../../../db/auth';
+import { getSpeciesById } from '../../../db/species';
+
+export const prerender = false;
+
+// Verificación de sesión de administrador
+const token = Astro.cookies.get('choco_session')?.value;
+const user = verifySession(token);
+if (!user) {
+  return Astro.redirect('/admin/login');
+}
+
+const { id } = Astro.params;
+if (!id) {
+  return Astro.redirect('/admin');
+}
+
+const especie = getSpeciesById(id);
+if (!especie) {
+  return Astro.redirect('/admin');
+}
+
+const d = especie.data;
+const esFlora = d.categoria === 'Flora';
+const bot = d.caracteristicasBotanicas || {};
+---
+
+<Layout title={`Editar ${d.nombre} | Panel Chocó Andino`}>
+  <div class="w-full min-h-screen bg-[var(--cho-cream,#faf6ea)] text-[var(--cho-ink,#1b2a22)] flex flex-col m-0 p-0 selection:bg-emerald-700 selection:text-white">
+    
+    {/* Barra Superior del Panel */}
+    <header class="w-full bg-[var(--cho-deep,#14301f)] text-white border-b border-emerald-900/40 py-3.5 px-4 sm:px-6 md:px-10 sticky top-0 z-40 backdrop-blur-md shadow-md">
+      <div class="max-w-5xl mx-auto flex justify-between items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <a 
+            href="/admin" 
+            class="text-emerald-300 hover:text-white text-xs font-bold inline-flex items-center gap-1.5 bg-emerald-900/70 hover:bg-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-700/50 transition-colors"
+          >
+            &larr; Volver al Panel
+          </a>
+          <span class="text-emerald-700 hidden sm:inline">•</span>
+          <span class="text-xs font-black text-white uppercase tracking-wider hidden sm:inline truncate max-w-xs">
+            Editando: {d.nombre}
+          </span>
+        </div>
+
+        <div class="text-xs text-emerald-200 font-semibold flex items-center gap-2">
+          <a href={`/especies/${especie.id}`} target="_blank" class="hover:underline text-[var(--cho-gold,#d4a63a)] flex items-center gap-1">
+            <span>Ver Ficha Pública</span>
+            &nearr;
+          </a>
+        </div>
+      </div>
+    </header>
+
+    {/* Formulario de Edición */}
+    <main class="max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-10 space-y-8 flex-grow">
+      
+      <div class="bg-white/95 border border-emerald-200 rounded-[32px] p-6 sm:p-10 shadow-xl space-y-8">
+        
+        <div>
+          <span class="text-xs font-black text-[var(--cho-green,#2e7d52)] uppercase tracking-wider block mb-1">
+            Modificación en Base de Datos
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-black text-[var(--cho-deep,#14301f)]">
+            Editar Especie: {d.nombre}
+          </h1>
+          <p class="text-xs sm:text-sm text-zinc-600 mt-1 font-serif italic">
+            {d.nombreCientifico} &bull; Categoría: {d.categoria}
+          </p>
+        </div>
+
+        <div id="formAlert" class="hidden p-4 rounded-2xl text-xs sm:text-sm font-bold border"></div>
+
+        <form id="speciesEditForm" class="space-y-10" data-species-id={especie.id}>
+          
+          {/* SECCIÓN 1: IDENTIFICACIÓN BÁSICA */}
+          <div class="space-y-4 pt-2">
+            <div class="border-b border-emerald-100 pb-2 flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-[var(--cho-forest,#1e4d36)] text-white text-xs font-black flex items-center justify-center">1</span>
+              <h2 class="text-base font-black text-[var(--cho-deep,#14301f)] uppercase tracking-wide">
+                Identificación y Categoría
+              </h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              
+              <div class="space-y-1.5">
+                <label for="nombre" class="block text-xs font-black uppercase text-zinc-700">
+                  Nombre Común <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="nombre" 
+                  name="nombre" 
+                  required 
+                  value={d.nombre}
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="nombreCientifico" class="block text-xs font-black uppercase text-zinc-700">
+                  Nombre Científico <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="nombreCientifico" 
+                  name="nombreCientifico" 
+                  required 
+                  value={d.nombreCientifico}
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm italic focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="categoria" class="block text-xs font-black uppercase text-zinc-700">
+                  Categoría <span class="text-rose-500">*</span>
+                </label>
+                <select 
+                  id="categoria" 
+                  name="categoria" 
+                  required 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-[var(--cho-deep,#14301f)] focus:outline-none focus:border-emerald-500 focus:bg-white transition-all cursor-pointer shadow-inner"
+                >
+                  <option value="Aves" selected={d.categoria === 'Aves'}>Aves</option>
+                  <option value="Mamíferos" selected={d.categoria === 'Mamíferos'}>Mamíferos</option>
+                  <option value="Anfibios" selected={d.categoria === 'Anfibios'}>Anfibios</option>
+                  <option value="Insectos" selected={d.categoria === 'Insectos'}>Insectos</option>
+                  <option value="Flora" selected={d.categoria === 'Flora'}>Flora</option>
+                </select>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="estadoConservacion" class="block text-xs font-black uppercase text-zinc-700">
+                  Estado de Conservación <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="estadoConservacion" 
+                  name="estadoConservacion" 
+                  required 
+                  value={d.estadoConservacion}
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="rangoAltitudinal" class="block text-xs font-black uppercase text-zinc-700">
+                  Rango Altitudinal
+                </label>
+                <input 
+                  type="text" 
+                  id="rangoAltitudinal" 
+                  name="rangoAltitudinal" 
+                  value={d.rangoAltitudinal || ''}
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="tamanoPeso" class="block text-xs font-black uppercase text-zinc-700">
+                  Tamaño / Peso
+                </label>
+                <input 
+                  type="text" 
+                  id="tamanoPeso" 
+                  name="tamanoPeso" 
+                  value={d.tamanoPeso || ''}
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+            </div>
+          </div>
+
+          {/* SECCIÓN 2: FOTOGRAFÍA ESPECÍFICA */}
+          <div class="space-y-4">
+            <div class="border-b border-emerald-100 pb-2 flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-[var(--cho-forest,#1e4d36)] text-white text-xs font-black flex items-center justify-center">2</span>
+              <h2 class="text-base font-black text-[var(--cho-deep,#14301f)] uppercase tracking-wide">
+                Fotografía Principal
+              </h2>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex gap-2 border-b border-emerald-100 pb-2">
+                <button 
+                  type="button" 
+                  id="tabUploadBtn" 
+                  class="px-4 py-2 rounded-xl text-xs font-black bg-[var(--cho-forest,#1e4d36)] text-white shadow-sm cursor-pointer"
+                >
+                  Subir nueva foto desde computadora
+                </button>
+                <button 
+                  type="button" 
+                  id="tabUrlBtn" 
+                  class="px-4 py-2 rounded-xl text-xs font-bold bg-stone-100 hover:bg-emerald-50 text-zinc-700 border border-emerald-200 cursor-pointer"
+                >
+                  Cambiar por URL de internet
+                </button>
+              </div>
+
+              {/* Panel de Subida desde Computadora */}
+              <div id="panelUpload" class="space-y-3">
+                <div class="border-2 border-dashed border-emerald-300 rounded-2xl p-6 text-center hover:bg-emerald-50/50 transition-colors">
+                  <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/webp,image/avif" class="hidden" />
+                  <label for="imageFileInput" class="cursor-pointer space-y-2 block">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto text-xl shadow-sm">
+                      📁
+                    </div>
+                    <p class="text-xs sm:text-sm font-bold text-zinc-800">
+                      Selecciona una foto nueva si deseas reemplazar la actual
+                    </p>
+                    <p class="text-[11px] text-zinc-500">
+                      Formatos: JPG, PNG, WebP o AVIF (máx. 8 MB)
+                    </p>
+                  </label>
+                </div>
+                <div id="uploadStatus" class="hidden text-xs font-bold text-emerald-800"></div>
+              </div>
+
+              {/* Panel de URL Directa */}
+              <div id="panelUrl" class="hidden space-y-2">
+                <label for="imageUrlInput" class="block text-xs font-bold text-zinc-700">
+                  URL directa de la imagen:
+                </label>
+                <input 
+                  type="url" 
+                  id="imageUrlInput" 
+                  value={d.imagen}
+                  placeholder="https://ejemplo.com/imagenes/mi-especie.jpg" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+              {/* Input oculto con la URL asignada */}
+              <input type="hidden" id="imagen" name="imagen" value={d.imagen} required />
+
+              {/* Vista previa de la foto actual */}
+              <div id="imagePreviewContainer" class="p-4 bg-stone-50 border border-emerald-200 rounded-2xl flex items-center gap-4">
+                <img id="imagePreview" src={d.imagen} alt={d.altImagen || d.nombre} class="w-24 h-24 rounded-xl object-cover border border-emerald-300 shadow-md" />
+                <div class="text-xs space-y-1 min-w-0">
+                  <span class="text-[10px] uppercase font-black tracking-widest text-[var(--cho-green,#2e7d52)] block">Foto actual vinculada</span>
+                  <p id="imagePreviewUrl" class="font-mono text-zinc-600 truncate max-w-md">{d.imagen}</p>
+                </div>
+              </div>
+
+              <div class="space-y-1.5 pt-1">
+                <label for="altImagen" class="block text-xs font-black uppercase text-zinc-700">
+                  Texto descriptivo / accesibilidad (alt)
+                </label>
+                <input 
+                  type="text" 
+                  id="altImagen" 
+                  name="altImagen" 
+                  value={d.altImagen || ''}
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN 3: DESCRIPCIÓN Y HÁBITAT */}
+          <div class="space-y-4">
+            <div class="border-b border-emerald-100 pb-2 flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-[var(--cho-forest,#1e4d36)] text-white text-xs font-black flex items-center justify-center">3</span>
+              <h2 class="text-base font-black text-[var(--cho-deep,#14301f)] uppercase tracking-wide">
+                Descripción, Hábitat y Alimentación
+              </h2>
+            </div>
+
+            <div class="space-y-4">
+              <div class="space-y-1.5">
+                <label for="descripcion" class="block text-xs font-black uppercase text-zinc-700">
+                  Descripción General <span class="text-rose-500">*</span>
+                </label>
+                <textarea 
+                  id="descripcion" 
+                  name="descripcion" 
+                  rows="3" 
+                  required 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                >{d.descripcion}</textarea>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <label for="habitat" class="block text-xs font-black uppercase text-zinc-700">
+                    Hábitat Natural <span class="text-rose-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="habitat" 
+                    name="habitat" 
+                    required 
+                    value={d.habitat}
+                    class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                  />
+                </div>
+
+                <div class="space-y-1.5">
+                  <label for="alimentacion" class="block text-xs font-black uppercase text-zinc-700">
+                    Alimentación / Nutrición <span class="text-rose-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="alimentacion" 
+                    name="alimentacion" 
+                    required 
+                    value={d.alimentacion}
+                    class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                  />
+                </div>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="caracteristicasFisicas" class="block text-xs font-black uppercase text-zinc-700">
+                  Características Físicas y Morfología
+                </label>
+                <textarea 
+                  id="caracteristicasFisicas" 
+                  name="caracteristicasFisicas" 
+                  rows="2" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                >{d.caracteristicasFisicas || ''}</textarea>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="rasgosIdentificacion" class="block text-xs font-black uppercase text-zinc-700">
+                  Rasgos Clave para Reconocerla en Campo
+                </label>
+                <textarea 
+                  id="rasgosIdentificacion" 
+                  name="rasgosIdentificacion" 
+                  rows="2" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                >{d.rasgosIdentificacion || ''}</textarea>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="distribucionGeografica" class="block text-xs font-black uppercase text-zinc-700">
+                  Distribución en Pichincha / Chocó Andino
+                </label>
+                <input 
+                  type="text" 
+                  id="distribucionGeografica" 
+                  name="distribucionGeografica" 
+                  value={d.distribucionGeografica || ''}
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+
+            </div>
+          </div>
+
+          {/* SECCIÓN 4: COMPORTAMIENTO Y ECOLOGÍA */}
+          <div class="space-y-4">
+            <div class="border-b border-emerald-100 pb-2 flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-[var(--cho-forest,#1e4d36)] text-white text-xs font-black flex items-center justify-center">4</span>
+              <h2 class="text-base font-black text-[var(--cho-deep,#14301f)] uppercase tracking-wide">
+                Ecología, Comportamiento y Reproducción
+              </h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label for="comportamientoHabitos" class="block text-xs font-black uppercase text-zinc-700">
+                  Comportamiento y Hábitos (o Condiciones de Crecimiento)
+                </label>
+                <textarea 
+                  id="comportamientoHabitos" 
+                  name="comportamientoHabitos" 
+                  rows="3" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                >{d.comportamientoHabitos || d.condicionesCrecimiento || ''}</textarea>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="reproduccionCiclo" class="block text-xs font-black uppercase text-zinc-700">
+                  Reproducción y Ciclo Vital
+                </label>
+                <textarea 
+                  id="reproduccionCiclo" 
+                  name="reproduccionCiclo" 
+                  rows="3" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                >{d.reproduccionCiclo || ''}</textarea>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label for="funcionEcologica" class="block text-xs font-black uppercase text-zinc-700">
+                  Función Ecológica Primaria
+                </label>
+                <textarea 
+                  id="funcionEcologica" 
+                  name="funcionEcologica" 
+                  rows="2" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                >{d.funcionEcologica || ''}</textarea>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="importanciaChocoAndino" class="block text-xs font-black uppercase text-zinc-700">
+                  Valor para el Chocó Andino
+                </label>
+                <textarea 
+                  id="importanciaChocoAndino" 
+                  name="importanciaChocoAndino" 
+                  rows="2" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                >{d.importanciaChocoAndino || ''}</textarea>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label for="amenazasPrincipales" class="block text-xs font-black uppercase text-zinc-700">
+                  Principales Amenazas
+                </label>
+                <textarea 
+                  id="amenazasPrincipales" 
+                  name="amenazasPrincipales" 
+                  rows="2" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                >{d.amenazasPrincipales || ''}</textarea>
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="medidasProteccion" class="block text-xs font-black uppercase text-zinc-700">
+                  Medidas y Acciones de Protección
+                </label>
+                <textarea 
+                  id="medidasProteccion" 
+                  name="medidasProteccion" 
+                  rows="2" 
+                  class="w-full bg-stone-50 border border-emerald-200 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                >{d.medidasProteccion || ''}</textarea>
+              </div>
+            </div>
+
+          </div>
+
+          {/* SECCIÓN 5: CAMPOS EXCLUSIVOS DE FLORA */}
+          <div id="floraExtraSection" class={esFlora ? 'space-y-4 bg-emerald-50/50 p-5 rounded-2xl border border-emerald-200' : 'hidden space-y-4 bg-emerald-50/50 p-5 rounded-2xl border border-emerald-200'}>
+            <div class="border-b border-emerald-200 pb-2">
+              <h2 class="text-sm font-black text-emerald-900 uppercase tracking-wide">
+                Detalles Botánicos (Flora)
+              </h2>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label for="botanicaHojas" class="block text-xs font-bold text-zinc-700">Hojas / Frondas</label>
+                <input type="text" id="botanicaHojas" value={bot.hojas || ''} class="w-full bg-white border border-emerald-200 rounded-xl p-2.5 text-xs sm:text-sm" />
+              </div>
+              <div class="space-y-1.5">
+                <label for="botanicaFlores" class="block text-xs font-bold text-zinc-700">Flores / Inflorescencias</label>
+                <input type="text" id="botanicaFlores" value={bot.flores || ''} class="w-full bg-white border border-emerald-200 rounded-xl p-2.5 text-xs sm:text-sm" />
+              </div>
+              <div class="space-y-1.5">
+                <label for="botanicaFrutos" class="block text-xs font-bold text-zinc-700">Frutos / Semillas / Esporas</label>
+                <input type="text" id="botanicaFrutos" value={bot.frutosSemillas || ''} class="w-full bg-white border border-emerald-200 rounded-xl p-2.5 text-xs sm:text-sm" />
+              </div>
+              <div class="space-y-1.5">
+                <label for="botanicaTronco" class="block text-xs font-bold text-zinc-700">Tallo / Tronco / Raíces</label>
+                <input type="text" id="botanicaTronco" value={bot.troncoRaices || ''} class="w-full bg-white border border-emerald-200 rounded-xl p-2.5 text-xs sm:text-sm" />
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN: MAPA DE DISTRIBUCIÓN POTENCIAL */}
+          <div class="space-y-3 pt-2">
+            <div class="border-b border-emerald-200 pb-2 flex items-center justify-between">
+              <h2 class="text-sm font-black text-emerald-900 uppercase tracking-wide">
+                Mapa de Distribución Potencial
+              </h2>
+              <a 
+                href={`/especies/${especie.id}#distribucion-potencial`} 
+                target="_blank" 
+                class="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline flex items-center gap-1"
+              >
+                Ver mapa interactivo en la ficha pública &rarr;
+              </a>
+            </div>
+            
+            <div class="bg-stone-50 border border-emerald-100 p-4 rounded-2xl text-xs text-zinc-700 space-y-1.5">
+              <div class="font-bold text-[var(--cho-forest,#1e4d36)] flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                Modelo Bioclimático Activo
+              </div>
+              <p>
+                El visor cartográfico individual utiliza OpenStreetMap y Leaflet con polígonos de idoneidad ambiental (Verde, Amarillo, Rojo) y marcadores de presencia confirmados para <em>{d.nombre}</em>.
+              </p>
+            </div>
+          </div>
+
+          {/* BOTONES DE ACCIÓN */}
+          <div class="pt-6 border-t border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <a 
+              href="/admin" 
+              class="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold text-zinc-600 hover:bg-stone-100 border border-stone-300 flex items-center justify-center transition-colors"
+            >
+              Cancelar
+            </a>
+
+            <button 
+              type="submit" 
+              id="saveBtn"
+              class="w-full sm:w-auto min-h-[52px] bg-[var(--cho-forest,#1e4d36)] hover:bg-[var(--cho-deep,#14301f)] text-white font-black px-8 py-3.5 rounded-2xl text-sm transition-all shadow-xl hover:shadow-2xl flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <svg class="w-5 h-5 text-[var(--cho-gold,#d4a63a)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Actualizar en la Base de Datos</span>
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    const form = document.getElementById('speciesEditForm') as HTMLFormElement;
+    const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
+    const formAlert = document.getElementById('formAlert')!;
+    const speciesId = form.dataset.speciesId;
+
+    // Tabs imagen
+    const tabUploadBtn = document.getElementById('tabUploadBtn')!;
+    const tabUrlBtn = document.getElementById('tabUrlBtn')!;
+    const panelUpload = document.getElementById('panelUpload')!;
+    const panelUrl = document.getElementById('panelUrl')!;
+    const imageFileInput = document.getElementById('imageFileInput') as HTMLInputElement;
+    const imageUrlInput = document.getElementById('imageUrlInput') as HTMLInputElement;
+    const imagenFinalInput = document.getElementById('imagen') as HTMLInputElement;
+    const imagePreview = document.getElementById('imagePreview') as HTMLImageElement;
+    const imagePreviewUrl = document.getElementById('imagePreviewUrl')!;
+    const uploadStatus = document.getElementById('uploadStatus')!;
+
+    tabUploadBtn.addEventListener('click', () => {
+      tabUploadBtn.className = 'px-4 py-2 rounded-xl text-xs font-black bg-[var(--cho-forest,#1e4d36)] text-white shadow-sm cursor-pointer';
+      tabUrlBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-stone-100 hover:bg-emerald-50 text-zinc-700 border border-emerald-200 cursor-pointer';
+      panelUpload.classList.remove('hidden');
+      panelUrl.classList.add('hidden');
+    });
+
+    tabUrlBtn.addEventListener('click', () => {
+      tabUrlBtn.className = 'px-4 py-2 rounded-xl text-xs font-black bg-[var(--cho-forest,#1e4d36)] text-white shadow-sm cursor-pointer';
+      tabUploadBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-stone-100 hover:bg-emerald-50 text-zinc-700 border border-emerald-200 cursor-pointer';
+      panelUrl.classList.remove('hidden');
+      panelUpload.classList.add('hidden');
+    });
+
+    imageFileInput.addEventListener('change', async () => {
+      const file = imageFileInput.files?.[0];
+      if (!file) return;
+
+      uploadStatus.classList.remove('hidden');
+      uploadStatus.textContent = 'Subiendo imagen nueva al servidor...';
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          uploadStatus.textContent = '✓ Imagen subida con éxito';
+          imagenFinalInput.value = data.url;
+          imagePreview.src = data.url;
+          imagePreviewUrl.textContent = data.url;
+        } else {
+          uploadStatus.textContent = '✗ Error: ' + (data.error || 'No se pudo subir la foto');
+        }
+      } catch (err) {
+        uploadStatus.textContent = '✗ Error de conexión';
+      }
+    });
+
+    imageUrlInput.addEventListener('input', () => {
+      const url = imageUrlInput.value.trim();
+      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/')) {
+        imagenFinalInput.value = url;
+        imagePreview.src = url;
+        imagePreviewUrl.textContent = url;
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formAlert.classList.add('hidden');
+
+      saveBtn.disabled = true;
+      const originalText = saveBtn.innerHTML;
+      saveBtn.innerHTML = '<span>Actualizando en la base de datos...</span>';
+
+      const cat = (document.getElementById('categoria') as HTMLSelectElement).value;
+      let caracteristicasBotanicas: any = undefined;
+      if (cat === 'Flora') {
+        caracteristicasBotanicas = {
+          hojas: (document.getElementById('botanicaHojas') as HTMLInputElement)?.value.trim() || undefined,
+          flores: (document.getElementById('botanicaFlores') as HTMLInputElement)?.value.trim() || undefined,
+          frutosSemillas: (document.getElementById('botanicaFrutos') as HTMLInputElement)?.value.trim() || undefined,
+          troncoRaices: (document.getElementById('botanicaTronco') as HTMLInputElement)?.value.trim() || undefined,
+        };
+      }
+
+      const payload = {
+        nombre: (document.getElementById('nombre') as HTMLInputElement).value.trim(),
+        nombreCientifico: (document.getElementById('nombreCientifico') as HTMLInputElement).value.trim(),
+        categoria: cat,
+        estadoConservacion: (document.getElementById('estadoConservacion') as HTMLInputElement).value.trim(),
+        rangoAltitudinal: (document.getElementById('rangoAltitudinal') as HTMLInputElement)?.value.trim(),
+        tamanoPeso: (document.getElementById('tamanoPeso') as HTMLInputElement)?.value.trim(),
+        imagen: imagenFinalInput.value.trim(),
+        altImagen: (document.getElementById('altImagen') as HTMLInputElement)?.value.trim(),
+        descripcion: (document.getElementById('descripcion') as HTMLTextAreaElement).value.trim(),
+        habitat: (document.getElementById('habitat') as HTMLInputElement).value.trim(),
+        alimentacion: (document.getElementById('alimentacion') as HTMLInputElement).value.trim(),
+        caracteristicasFisicas: (document.getElementById('caracteristicasFisicas') as HTMLTextAreaElement)?.value.trim(),
+        rasgosIdentificacion: (document.getElementById('rasgosIdentificacion') as HTMLTextAreaElement)?.value.trim(),
+        distribucionGeografica: (document.getElementById('distribucionGeografica') as HTMLInputElement)?.value.trim(),
+        comportamientoHabitos: (document.getElementById('comportamientoHabitos') as HTMLTextAreaElement)?.value.trim(),
+        reproduccionCiclo: (document.getElementById('reproduccionCiclo') as HTMLTextAreaElement)?.value.trim(),
+        funcionEcologica: (document.getElementById('funcionEcologica') as HTMLTextAreaElement)?.value.trim(),
+        importanciaChocoAndino: (document.getElementById('importanciaChocoAndino') as HTMLTextAreaElement)?.value.trim(),
+        amenazasPrincipales: (document.getElementById('amenazasPrincipales') as HTMLTextAreaElement)?.value.trim(),
+        medidasProteccion: (document.getElementById('medidasProteccion') as HTMLTextAreaElement)?.value.trim(),
+        caracteristicasBotanicas,
+      };
+
+      try {
+        const res = await fetch(`/api/especies/${speciesId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          formAlert.className = 'p-5 rounded-2xl text-xs sm:text-sm font-bold border bg-emerald-100 text-emerald-950 border-emerald-300 block space-y-2';
+          formAlert.innerHTML = `
+            <div>✓ ¡Especie actualizada con éxito en la base de datos!</div>
+            <div class="pt-2 flex gap-3">
+              <a href="/especies/${data.especie.id}" target="_blank" class="underline font-bold text-emerald-900">Ver ficha pública actualizada &rarr;</a>
+              <a href="/admin" class="underline font-bold text-emerald-900">Volver al panel &rarr;</a>
+            </div>
+          `;
+          formAlert.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          formAlert.className = 'p-4 rounded-2xl text-xs sm:text-sm font-bold border bg-rose-100 text-rose-900 border-rose-300 block';
+          formAlert.textContent = data.error || 'Ocurrió un error al actualizar';
+          formAlert.scrollIntoView({ behavior: 'smooth' });
+        }
+      } catch (err) {
+        formAlert.className = 'p-4 rounded-2xl text-xs sm:text-sm font-bold border bg-rose-100 text-rose-900 border-rose-300 block';
+        formAlert.textContent = 'Error de conexión con el servidor.';
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+      }
+    });
+  </script>
+</Layout>

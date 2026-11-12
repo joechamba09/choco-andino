@@ -1,0 +1,456 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   🌿 VARIABLES GLOBALES Y PALETA DEL CHOCÓ ANDINO
+   --------------------------------------------------------------------------
+   Centro de configuración visual para cambios en vivo durante la defensa de tesis.
+   Cualquier modificación en estos valores se refleja de forma instantánea en
+   toda la plataforma web (cabecera, botones, tarjetas, fondos y textos).
+   ========================================================================== */
+:root {
+  /* ==========================================
+     1. PALETA DE COLORES PRINCIPALES (Tesis)
+     ========================================== */
+  --color-primary: #1e4d36;       /* Verde bosque principal: botones primarios y títulos */
+  --color-secondary: #2e7d52;     /* Verde natural: acentos, iconos y bordes activos */
+  --color-deep: #14301f;          /* Verde bosque profundo: barra superior y footer */
+  --color-accent: #d4a63a;        /* Dorado andino: insignias UNESCO, estrellas y realces */
+  --color-accent-soft: #f6e7b8;   /* Dorado pastel para badges y fondos destacados */
+  --color-background: #faf6ea;    /* Crema cálido natural: fondo general del catálogo */
+  --color-surface: #ffffff;       /* Blanco puro: tarjetas de especies y modales */
+  --color-surface-alt: #f1ecd9;   /* Crema verdoso: fondos de secciones alternas */
+  --color-sage: #8fb39b;          /* Verde salvia: bordes sutiles y siluetas botánicas */
+  --color-earth: #8a6a45;         /* Tono tierra orgánico: categoría Mamíferos */
+  --color-highlight: #e6bf5c;     /* Resalte brillante para títulos y destellos */
+  --color-ink: #1b2a22;           /* Texto principal de alta legibilidad y contraste */
+  --color-muted: #526058;         /* Texto secundario, subtítulos y leyendas */
+
+  /* ==========================================
+     2. ALIASES COMPATIBLES (Sintaxis --cho-*)
+     ========================================== */
+  --cho-deep: var(--color-deep);
+  --cho-forest: var(--color-primary);
+  --cho-green: var(--color-secondary);
+  --cho-sage: var(--color-sage);
+  --cho-cream: var(--color-background);
+  --cho-cream-2: var(--color-surface-alt);
+  --cho-gold: var(--color-accent);
+  --cho-gold-soft: var(--color-accent-soft);
+  --cho-ink: var(--color-ink);
+  --cho-earth: var(--color-earth);
+  --cho-earth-soft: #efe4d2;
+
+  /* ==========================================
+     3. TIPOGRAFÍAS Y ESPACIADOS
+     ========================================== */
+  --font-serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --cho-radius: 28px;
+  --cho-radius-sm: 16px;
+  --cho-shadow: 0 6px 18px -8px rgba(20, 48, 31, 0.28);
+  --cho-shadow-hover: 0 18px 34px -14px rgba(20, 48, 31, 0.38);
+}
+
+/* ==========================================================================
+   4. ESTILOS GLOBALES BASE
+   ========================================================================== */
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-sans);
+}
+
+#catalogo {
+  scroll-margin-top: 90px;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* Foco visible y accesible para teclado */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+/* ==========================================================================
+   5. COMPONENTES VISUALES Y TARJETAS
+   ========================================================================== */
+.cho-card {
+  box-shadow: var(--cho-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.cho-card:hover,
+.cho-card:focus-visible {
+  transform: translateY(-5px);
+  box-shadow: var(--cho-shadow-hover);
+}
+
+.cho-btn {
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.cho-btn:hover {
+  transform: translateY(-2px);
+}
+
+.cho-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Animación de aparición escalonada al cargar */
+@keyframes choRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cho-reveal {
+  animation: choRise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.cho-reveal:nth-child(2) { animation-delay: 0.08s; }
+.cho-reveal:nth-child(3) { animation-delay: 0.16s; }
+.cho-reveal:nth-child(n+4) { animation-delay: 0.24s; }
+
+/* Paneles de categorías temáticas del catálogo */
+.cho-sec {
+  --sec-accent: var(--color-primary);
+  --sec-tint: #ffffff;
+  position: relative;
+  overflow: hidden;
+  border-radius: 32px;
+  padding: 1.25rem;
+  background: linear-gradient(165deg, var(--sec-tint) 0%, rgba(255, 255, 255, 0) 75%);
+  border: 1px solid color-mix(in srgb, var(--sec-accent) 18%, transparent);
+}
+
+@media (min-width: 768px) {
+  .cho-sec {
+    padding: 2rem;
+  }
+}
+
+.cho-sec--aves      { --sec-accent: #2f6f5e; --sec-tint: #e3f0e8; }
+.cho-sec--mamiferos { --sec-accent: var(--color-earth); --sec-tint: #efe4d2; }
+.cho-sec--anfibios  { --sec-accent: #2a7a6f; --sec-tint: #d9eee8; }
+.cho-sec--insectos  { --sec-accent: #b3851c; --sec-tint: #f7ecc9; }
+.cho-sec--flora     { --sec-accent: #3b7a3a; --sec-tint: #e2efd5; }
+
+.cho-sec .cho-sec-icon {
+  background: var(--sec-accent);
+}
+
+.cho-sec > *:not(.cho-deco) {
+  position: relative;
+  z-index: 1;
+}
+
+.cho-deco {
+  position: absolute;
+  pointer-events: none;
+  color: var(--sec-accent);
+  opacity: 0.13;
+  z-index: 0;
+}
+
+@keyframes choFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+
+.cho-float {
+  animation: choFloat 7s ease-in-out infinite;
+}
+.cho-float-2 {
+  animation-duration: 9s;
+  animation-delay: -3s;
+}
+
+/* ==========================================================================
+   6. FICHA MODAL DE BIODIVERSIDAD (VISTA RÁPIDA)
+   ========================================================================== */
+.cho-ficha {
+  display: none;
+}
+.cho-ficha.is-open {
+  display: flex;
+  animation: choFade 0.25s ease both;
+}
+.cho-ficha.is-open .cho-ficha-panel {
+  animation: choFichaIn 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes choFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes choFichaIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.cho-serif {
+  font-family: var(--font-serif);
+}
+
+.cho-estado[data-tono="ok"] {
+  background: #dcefdc;
+  color: #1f5a35;
+  border-color: #9ccaa6;
+}
+.cho-estado[data-tono="alerta"] {
+  background: var(--color-accent-soft);
+  color: #6b4e0b;
+  border-color: var(--color-accent);
+}
+.cho-estado[data-tono="riesgo"] {
+  background: #f9dfc4;
+  color: #7a3a08;
+  border-color: #e0a56a;
+}
+.cho-estado[data-tono="neutro"] {
+  background: #ececec;
+  color: #444444;
+  border-color: #cfcfcf;
+}
+
+/* ==========================================================================
+   7. SECCIÓN HERO (PORTADA)
+   ========================================================================== */
+.cho-hero-tint {
+  background: linear-gradient(180deg, rgba(30, 77, 54, 0.34) 0%, rgba(30, 77, 54, 0.10) 45%, rgba(20, 48, 31, 0) 100%);
+}
+.cho-hero-glow {
+  background: radial-gradient(ellipse 60% 45% at 78% 4%, rgba(246, 231, 184, 0.38), transparent 70%),
+              radial-gradient(ellipse 50% 40% at 15% 90%, rgba(143, 179, 155, 0.22), transparent 70%);
+}
+
+h1.cho-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 9vw, 5rem);
+  line-height: 1.02;
+  font-weight: 800;
+  text-shadow: 0 2px 22px rgba(8, 24, 16, 0.5);
+}
+
+.cho-title-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-bottom: 0.3em;
+  font-family: var(--font-sans);
+  font-size: clamp(0.8rem, 2.6vw, 1.15rem);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #f6f1e1;
+}
+
+.cho-title-top::before,
+.cho-title-top::after {
+  content: "";
+  height: 1px;
+  width: clamp(1.5rem, 8vw, 4rem);
+  background: linear-gradient(90deg, transparent, var(--color-accent));
+}
+.cho-title-top::after {
+  transform: scaleX(-1);
+}
+
+.cho-title-main {
+  display: block;
+  padding-bottom: 0.06em;
+  background: linear-gradient(180deg, #fbefc4 0%, #e6bf5c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--color-accent);
+  filter: drop-shadow(0 3px 12px rgba(8, 24, 16, 0.45));
+}
+
+.cho-rule {
+  height: 1px;
+  width: clamp(2rem, 10vw, 5rem);
+  background: linear-gradient(90deg, transparent, currentColor);
+}
+.cho-rule:last-child {
+  transform: scaleX(-1);
+}
+
+p.cho-sub {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.05rem, 2.3vw, 1.4rem);
+  line-height: 1.5;
+  color: #f6f1e1;
+  max-width: 38rem;
+  text-shadow: 0 1px 14px rgba(8, 24, 16, 0.5);
+}
+
+@keyframes choHeroIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.cho-in {
+  animation: choHeroIn 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes choDrift {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-18px, -8px); }
+}
+.cho-bird {
+  animation: choDrift 12s ease-in-out infinite alternate;
+}
+.cho-bird-2 {
+  animation-duration: 15s;
+  animation-delay: -4s;
+}
+.cho-bird-3 {
+  animation-duration: 17s;
+  animation-delay: -8s;
+}
+
+.cho-scroll {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  opacity: 0.85;
+}
+.cho-scroll:hover {
+  opacity: 1;
+  transform: translateY(2px);
+}
+.cho-scroll-line {
+  position: relative;
+  display: block;
+  width: 1px;
+  height: 56px;
+  background: rgba(246, 241, 225, 0.4);
+  overflow: hidden;
+}
+.cho-scroll-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -14px;
+  width: 1px;
+  height: 14px;
+  background: var(--color-accent);
+  animation: choScrollDot 2.2s ease-in-out infinite;
+}
+@keyframes choScrollDot {
+  to { transform: translateY(72px); }
+}
+
+.cho-hero-btn {
+  position: relative;
+}
+.cho-hero-btn::after {
+  content: "";
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+.cho-hero-btn:hover::after,
+.cho-hero-btn:focus-visible::after {
+  transform: scaleX(1);
+}
+.cho-hero-btn > span:last-child {
+  transition: transform 0.25s ease, background-color 0.25s ease, color 0.25s ease;
+}
+.cho-hero-btn:hover > span:last-child {
+  transform: translateX(3px);
+}
+
+/* ==========================================================================
+   8. ASISTENTE IA: INDICADOR "ESCRIBIENDO"
+   ========================================================================== */
+.cho-dots {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.cho-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+  animation: choDots 1.1s ease-in-out infinite;
+}
+.cho-dots span:nth-child(2) { animation-delay: 0.15s; }
+.cho-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes choDots {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+/* Accesibilidad: preferencia de reducción de movimiento */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .cho-reveal,
+  .cho-in,
+  .cho-bird,
+  .cho-scroll-line::after,
+  .cho-float,
+  .cho-ficha.is-open,
+  .cho-ficha.is-open .cho-ficha-panel {
+    animation: none !important;
+  }
+  .cho-card,
+  .cho-btn,
+  .cho-card img,
+  .hero-slide,
+  .cho-scroll,
+  .cho-hero-btn::after,
+  .cho-hero-btn > span:last-child {
+    transition: none !important;
+  }
+  .cho-card:hover,
+  .cho-btn:hover {
+    transform: none !important;
+  }
+  .animate-pulse {
+    animation: none !important;
+  }
+  .cho-dots span {
+    animation: none !important;
+    opacity: 0.7;
+  }
+}

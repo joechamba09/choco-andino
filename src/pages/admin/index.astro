@@ -1,0 +1,492 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { verifySession } from '../../db/auth';
+import { getAllSpecies, getCategoryCounts } from '../../db/species';
+
+export const prerender = false;
+
+// Protección estricta de ruta en el servidor
+const token = Astro.cookies.get('choco_session')?.value;
+const user = verifySession(token);
+if (!user) {
+  return Astro.redirect('/admin/login');
+}
+
+const especies = getAllSpecies();
+const counts = getCategoryCounts();
+---
+
+<Layout title="Panel de Administración | Catálogo Chocó Andino">
+  <div class="w-full min-h-screen bg-[var(--cho-cream,#faf6ea)] text-[var(--cho-ink,#1b2a22)] flex flex-col m-0 p-0 selection:bg-emerald-700 selection:text-white">
+    
+    {/* Barra de Navegación del Administrador */}
+    <header class="w-full bg-[var(--cho-deep,#14301f)] text-white border-b border-emerald-900/40 py-3.5 px-4 sm:px-6 md:px-10 sticky top-0 z-40 backdrop-blur-md shadow-md">
+      <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+        
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl text-white shadow-md">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c2 2 2.6 3.5 3.7 9.2A7 7 0 0 1 11 20z"></path>
+              <path d="M2 21c0-3 1.85-5.36 5.08-6"></path>
+              <path d="M12 11c-2 2-3 4-3 6"></path>
+            </svg>
+          </div>
+          <div>
+            <span class="block text-xs font-black tracking-widest text-[var(--cho-gold,#d4a63a)] uppercase">Administración</span>
+            <span class="text-sm sm:text-base font-black text-white">Chocó Andino de Pichincha</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-4 text-xs font-bold">
+          <a 
+            href="/" 
+            target="_blank" 
+            class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-100 hover:text-white px-3.5 py-2 rounded-xl border border-emerald-700/50 transition-all flex items-center gap-1.5 min-h-[40px]"
+          >
+            <span>Ver Catálogo Público</span>
+            <svg class="w-3.5 h-3.5 text-[var(--cho-gold,#d4a63a)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </a>
+
+          <div class="hidden sm:flex items-center gap-2 text-emerald-200 bg-emerald-950/80 px-3 py-2 rounded-xl border border-emerald-800/40">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>{user.nombre}</span>
+          </div>
+
+          <a 
+            href="/api/auth/logout" 
+            class="bg-rose-950/70 hover:bg-rose-900 text-rose-200 hover:text-white px-3.5 py-2 rounded-xl border border-rose-800/50 transition-all flex items-center gap-1.5 min-h-[40px]"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span class="hidden sm:inline">Cerrar Sesión</span>
+          </a>
+        </div>
+
+      </div>
+    </header>
+
+    {/* Contenido Principal del Panel */}
+    <main class="max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-10 space-y-8 flex-grow">
+      
+      {/* Encabezado y Acción Principal */}
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/90 border border-emerald-200 rounded-[28px] p-6 shadow-sm">
+        <div>
+          <div class="inline-flex items-center gap-2 text-xs font-black text-[var(--cho-forest,#1e4d36)] uppercase tracking-wider mb-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Base de Datos Conectada y Permanente
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black text-[var(--cho-deep,#14301f)]">
+            Gestión de Especies del Catálogo
+          </h1>
+          <p class="text-xs sm:text-sm text-zinc-600">
+            Añade, edita o elimina especies directamente en la base de datos sin tocar el código fuente.
+          </p>
+        </div>
+
+        <a 
+          href="/admin/nueva" 
+          class="w-full sm:w-auto min-h-[48px] bg-[var(--cho-forest,#1e4d36)] hover:bg-[var(--cho-green,#2e7d52)] text-white font-black px-6 py-3.5 rounded-2xl text-xs sm:text-sm transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 cursor-pointer shrink-0"
+        >
+          <svg class="w-4 h-4 text-[var(--cho-gold,#d4a63a)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Agregar Nueva Especie</span>
+        </a>
+      </div>
+
+      {/* Tarjetas de Estadísticas del Catálogo */}
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        
+        <div class="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Total Especies</span>
+          <span id="statTotal" class="text-2xl sm:text-3xl font-black text-[var(--cho-deep,#14301f)] mt-1">{counts.Total}</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Aves</span>
+          <span class="text-2xl sm:text-3xl font-black text-emerald-800 mt-1">{counts.Aves}</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[10px] font-black text-amber-700 uppercase tracking-widest">Mamíferos</span>
+          <span class="text-2xl sm:text-3xl font-black text-amber-900 mt-1">{counts.Mamíferos}</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[10px] font-black text-teal-700 uppercase tracking-widest">Anfibios</span>
+          <span class="text-2xl sm:text-3xl font-black text-teal-800 mt-1">{counts.Anfibios}</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[10px] font-black text-yellow-700 uppercase tracking-widest">Insectos</span>
+          <span class="text-2xl sm:text-3xl font-black text-yellow-900 mt-1">{counts.Insectos}</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[10px] font-black text-green-700 uppercase tracking-widest">Flora</span>
+          <span class="text-2xl sm:text-3xl font-black text-green-800 mt-1">{counts.Flora}</span>
+        </div>
+
+      </div>
+
+      {/* Barra de Filtros y Búsqueda */}
+      <div class="bg-white p-4 sm:p-5 rounded-[24px] border border-emerald-200 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+        
+        <div class="relative w-full md:w-80">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-emerald-700 pointer-events-none">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <input 
+            type="text" 
+            id="adminSearchInput" 
+            placeholder="Buscar por nombre común o científico..." 
+            class="w-full bg-stone-50 border border-emerald-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-zinc-900 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+          />
+        </div>
+
+        <div class="flex flex-wrap gap-1.5 w-full md:w-auto overflow-x-auto pb-1" id="adminCategoryFilters">
+          {['Todas', 'Aves', 'Mamíferos', 'Anfibios', 'Insectos', 'Flora'].map((cat) => (
+            <button 
+              type="button"
+              data-cat={cat}
+              class={`filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[40px] flex items-center justify-center ${
+                cat === 'Todas'
+                  ? 'bg-[var(--cho-forest,#1e4d36)] text-white shadow-sm'
+                  : 'bg-stone-50 hover:bg-emerald-50 text-zinc-700 border border-emerald-200'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+      </div>
+
+      {/* Lista de Especies (Adaptada a pantallas táctiles y escritorio) */}
+      <div class="bg-white border border-emerald-200 rounded-[28px] overflow-hidden shadow-sm">
+        
+        {/* Vista en Tabla para Computadoras (md y superior) */}
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-emerald-50/80 text-[var(--cho-forest,#1e4d36)] text-[11px] font-black uppercase tracking-wider border-b border-emerald-200">
+              <tr>
+                <th class="py-3.5 px-4 w-16">Foto</th>
+                <th class="py-3.5 px-4">Nombre Común</th>
+                <th class="py-3.5 px-4">Nombre Científico</th>
+                <th class="py-3.5 px-4">Categoría</th>
+                <th class="py-3.5 px-4">Conservación</th>
+                <th class="py-3.5 px-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-emerald-100 font-medium text-zinc-800" id="speciesTableBody">
+              {especies.map((esp) => (
+                <tr 
+                  class="species-row hover:bg-stone-50/80 transition-colors"
+                  data-name={esp.data.nombre.toLowerCase()}
+                  data-scientific={esp.data.nombreCientifico.toLowerCase()}
+                  data-category={esp.data.categoria}
+                  data-id={esp.id}
+                >
+                  <td class="py-3 px-4">
+                    <img 
+                      src={esp.data.imagen} 
+                      alt={esp.data.altImagen || esp.data.nombre} 
+                      class="w-12 h-12 rounded-xl object-cover border border-emerald-200 shadow-sm"
+                      loading="lazy"
+                    />
+                  </td>
+                  <td class="py-3 px-4 font-bold text-[var(--cho-deep,#14301f)]">
+                    {esp.data.nombre}
+                  </td>
+                  <td class="py-3 px-4 font-serif italic text-emerald-900">
+                    {esp.data.nombreCientifico}
+                  </td>
+                  <td class="py-3 px-4">
+                    <span class="inline-block bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold">
+                      {esp.data.categoria}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-xs font-semibold text-zinc-600">
+                    {esp.data.estadoConservacion}
+                  </td>
+                  <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+                    <a 
+                      href={`/especies/${esp.id}`} 
+                      target="_blank" 
+                      title="Ver ficha pública"
+                      class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-stone-100 hover:bg-emerald-100 text-zinc-700 hover:text-emerald-900 border border-emerald-200 transition-colors"
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </a>
+                    <a 
+                      href={`/admin/editar/${esp.id}`} 
+                      title="Editar especie"
+                      class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-[var(--cho-forest,#1e4d36)] hover:text-white border border-emerald-200 transition-colors"
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </a>
+                    <button 
+                      type="button" 
+                      title="Eliminar especie"
+                      class="btn-delete inline-flex items-center justify-center w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 transition-colors cursor-pointer"
+                      data-id={esp.id}
+                      data-nombre={esp.data.nombre}
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Vista en Tarjetas para Móviles (pantallas menores a 768px) */}
+        <div class="md:hidden divide-y divide-emerald-100" id="speciesCardsContainer">
+          {especies.map((esp) => (
+            <div 
+              class="species-card-mobile p-4 space-y-3"
+              data-name={esp.data.nombre.toLowerCase()}
+              data-scientific={esp.data.nombreCientifico.toLowerCase()}
+              data-category={esp.data.categoria}
+              data-id={esp.id}
+            >
+              <div class="flex gap-3.5 items-center">
+                <img 
+                  src={esp.data.imagen} 
+                  alt={esp.data.altImagen || esp.data.nombre} 
+                  class="w-16 h-16 rounded-2xl object-cover border border-emerald-200 shadow-sm shrink-0"
+                  loading="lazy"
+                />
+                <div class="min-w-0 flex-grow">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="inline-block bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md text-[10px] font-black uppercase">
+                      {esp.data.categoria}
+                    </span>
+                    <span class="text-[10px] text-zinc-500 font-bold truncate">
+                      {esp.data.estadoConservacion}
+                    </span>
+                  </div>
+                  <h3 class="text-sm font-black text-[var(--cho-deep,#14301f)] truncate mt-1">
+                    {esp.data.nombre}
+                  </h3>
+                  <p class="text-xs font-serif italic text-emerald-900 truncate">
+                    {esp.data.nombreCientifico}
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex gap-2 pt-1">
+                <a 
+                  href={`/especies/${esp.id}`} 
+                  target="_blank"
+                  class="flex-1 min-h-[44px] bg-stone-100 hover:bg-emerald-100 text-zinc-700 font-bold text-xs py-2 px-3 rounded-xl border border-emerald-200 flex items-center justify-center gap-1.5"
+                >
+                  <span>Ver pública</span>
+                  &nearr;
+                </a>
+                <a 
+                  href={`/admin/editar/${esp.id}`} 
+                  class="flex-1 min-h-[44px] bg-emerald-50 hover:bg-emerald-600 text-[var(--cho-forest,#1e4d36)] hover:text-white font-bold text-xs py-2 px-3 rounded-xl border border-emerald-200 flex items-center justify-center gap-1.5"
+                >
+                  <span>Editar</span>
+                </a>
+                <button 
+                  type="button" 
+                  class="btn-delete w-12 min-h-[44px] bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white font-bold text-xs rounded-xl border border-rose-200 flex items-center justify-center cursor-pointer"
+                  data-id={esp.id}
+                  data-nombre={esp.data.nombre}
+                >
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Mensaje de no resultados */}
+        <div id="adminNoResults" class="hidden text-center py-16 px-4 text-zinc-500 text-sm font-medium">
+          <p class="text-base font-bold text-zinc-700 mb-1">No se encontraron especies</p>
+          <p class="text-xs">Prueba con otro término de búsqueda o cambia el filtro de categoría.</p>
+        </div>
+
+      </div>
+
+    </main>
+
+    {/* Modal de Confirmación de Eliminación */}
+    <div id="deleteModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div class="bg-white border border-rose-200 rounded-[28px] max-w-md w-full p-6 shadow-2xl space-y-5">
+        <div class="flex items-center gap-3.5 text-rose-600">
+          <div class="w-12 h-12 rounded-2xl bg-rose-100 flex items-center justify-center text-xl shrink-0">
+            ⚠️
+          </div>
+          <div>
+            <h3 class="text-base font-black text-zinc-900">¿Eliminar especie?</h3>
+            <p class="text-xs text-zinc-500">Esta acción es permanente en la base de datos.</p>
+          </div>
+        </div>
+
+        <p class="text-xs sm:text-sm text-zinc-700 leading-relaxed">
+          Estás a punto de eliminar a <strong id="deleteSpeciesName" class="text-zinc-900"></strong>. La ficha desaparecerá del catálogo público inmediatamente.
+        </p>
+
+        <div class="flex gap-2.5 justify-end pt-2">
+          <button 
+            type="button" 
+            id="cancelDeleteBtn"
+            class="min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold text-zinc-600 hover:bg-stone-100 border border-stone-200 cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="button" 
+            id="confirmDeleteBtn"
+            class="min-h-[44px] px-5 py-2 rounded-xl text-xs font-black text-white bg-rose-600 hover:bg-rose-700 shadow-md cursor-pointer flex items-center gap-1.5"
+          >
+            <span>Sí, eliminar permanentemente</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Filtros y Búsqueda en el Panel
+    const searchInput = document.getElementById('adminSearchInput') as HTMLInputElement;
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const rows = document.querySelectorAll('.species-row');
+    const cards = document.querySelectorAll('.species-card-mobile');
+    const noResults = document.getElementById('adminNoResults');
+
+    let currentCategory = 'Todas';
+
+    function filterAdmin() {
+      const q = (searchInput?.value || '').toLowerCase().trim();
+      let visible = 0;
+
+      const checkItem = (el: Element) => {
+        const name = (el as HTMLElement).dataset.name || '';
+        const scientific = (el as HTMLElement).dataset.scientific || '';
+        const category = (el as HTMLElement).dataset.category || '';
+
+        const matchesQ = !q || name.includes(q) || scientific.includes(q);
+        const matchesCat = currentCategory === 'Todas' || category === currentCategory;
+
+        if (matchesQ && matchesCat) {
+          (el as HTMLElement).style.display = '';
+          visible++;
+        } else {
+          (el as HTMLElement).style.display = 'none';
+        }
+      };
+
+      rows.forEach(checkItem);
+      cards.forEach(checkItem);
+
+      if (noResults) {
+        noResults.style.display = visible === 0 ? 'block' : 'none';
+      }
+    }
+
+    searchInput?.addEventListener('input', filterAdmin);
+
+    filterButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach((b) => {
+          b.className = 'filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[40px] flex items-center justify-center bg-stone-50 hover:bg-emerald-50 text-zinc-700 border border-emerald-200';
+        });
+        btn.className = 'filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[40px] flex items-center justify-center bg-[var(--cho-forest,#1e4d36)] text-white shadow-sm';
+        currentCategory = (btn as HTMLElement).dataset.cat || 'Todas';
+        filterAdmin();
+      });
+    });
+
+    // Modal de Eliminación de Especie
+    const deleteModal = document.getElementById('deleteModal')!;
+    const deleteSpeciesName = document.getElementById('deleteSpeciesName')!;
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn')!;
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn')!;
+
+    let targetDeleteId = '';
+
+    document.querySelectorAll('.btn-delete').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        targetDeleteId = (btn as HTMLElement).dataset.id || '';
+        const nombre = (btn as HTMLElement).dataset.nombre || 'esta especie';
+        deleteSpeciesName.textContent = `"${nombre}"`;
+        deleteModal.classList.remove('hidden');
+      });
+    });
+
+    cancelDeleteBtn?.addEventListener('click', () => {
+      deleteModal.classList.add('hidden');
+      targetDeleteId = '';
+    });
+
+    confirmDeleteBtn?.addEventListener('click', async () => {
+      if (!targetDeleteId) return;
+
+      confirmDeleteBtn.disabled = true;
+      confirmDeleteBtn.textContent = 'Eliminando...';
+
+      try {
+        const res = await fetch(`/api/especies/${targetDeleteId}`, {
+          method: 'DELETE',
+        });
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          // Remover del DOM inmediatamente
+          document.querySelectorAll(`[data-id="${targetDeleteId}"]`).forEach((el) => el.remove());
+          deleteModal.classList.add('hidden');
+          // Actualizar contador
+          const statTotal = document.getElementById('statTotal');
+          if (statTotal) {
+            const current = parseInt(statTotal.textContent || '0', 10);
+            if (current > 0) statTotal.textContent = (current - 1).toString();
+          }
+        } else {
+          alert(data.error || 'No se pudo eliminar la especie');
+        }
+      } catch (err) {
+        alert('Error al comunicarse con el servidor');
+      } finally {
+        confirmDeleteBtn.disabled = false;
+        confirmDeleteBtn.innerHTML = '<span>Sí, eliminar permanentemente</span>';
+        targetDeleteId = '';
+      }
+    });
+
+    deleteModal?.addEventListener('click', (e) => {
+      if (e.target === deleteModal) {
+        deleteModal.classList.add('hidden');
+        targetDeleteId = '';
+      }
+    });
+  </script>
+</Layout>

@@ -1,0 +1,649 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getSpeciesBySlug, getAdjacentSpecies } from '../../db/species';
+import MapaDistribucion from '../../components/MapaDistribucion.astro';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+if (!slug) {
+  return Astro.redirect('/#catalogo');
+}
+
+const especie = getSpeciesBySlug(slug);
+if (!especie) {
+  return Astro.redirect('/#catalogo');
+}
+
+const { prevEspecie, nextEspecie } = getAdjacentSpecies(slug);
+const d = especie.data;
+const esFlora = d.categoria === 'Flora';
+
+// Iconos vectoriales de trazo natural
+const ic = {
+  leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c2 2 2.6 3.5 3.7 9.2A7 7 0 0 1 11 20z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/><path d="M12 11c-2 2-3 4-3 6"/>',
+  bird: '<path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20"/><path d="m20 7 2 .5-2 .5"/><path d="M10 18v3"/><path d="M14 17.75V21"/><path d="M7 18a6 6 0 0 0 3.84-10.61"/>',
+  paw: '<circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>',
+  water: '<path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/>',
+  bug: '<path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-4"/><path d="M22 13h-4"/>',
+  flower: '<circle cx="12" cy="12" r="3"/><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 1 1 4.5 4.5 4.5 4.5 0 1 1-4.5 4.5"/><path d="M12 7.5V9"/><path d="M7.5 12H9"/><path d="M16.5 12H15"/><path d="M12 16.5V15"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  mountain: '<path d="m8 3 4 8 5-5 5 15H2L8 3z"/>',
+  sparkles: '<path d="M9.9 2.9 11 6.7a2 2 0 0 0 1.3 1.3l3.8 1.1-3.8 1.1a2 2 0 0 0-1.3 1.3l-1.1 3.8-1.1-3.8a2 2 0 0 0-1.3-1.3L3.7 9.1 7.5 8a2 2 0 0 0 1.3-1.3z"/><path d="M19 14v4"/><path d="M17 16h4"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  book: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/>',
+  arrowLeft: '<path d="m15 18-6-6 6-6"/>',
+  arrowRight: '<path d="m9 18 6-6-6-6"/>',
+  mapPin: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>',
+  tree: '<path d="M12 22v-6"/><path d="M12 16a5 5 0 0 0 5-5 4 4 0 0 0-2-6 4 4 0 0 0-6 0 4 4 0 0 0-2 6 5 5 0 0 0 5 5z"/>',
+  info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>'
+};
+
+const iconoCat = (cat: string) =>
+  cat === 'Aves' ? ic.bird : cat === 'Mamíferos' ? ic.paw : cat === 'Anfibios' ? ic.water : cat === 'Insectos' ? ic.bug : ic.flower;
+
+// Badges adaptados a la paleta clara y natural del Chocó Andino
+const estadoColorBadge = (tono: string) => {
+  if (tono === 'riesgo') return 'bg-rose-100 text-rose-900 border-rose-300 shadow-sm';
+  if (tono === 'alerta') return 'bg-amber-100 text-amber-950 border-amber-300 shadow-sm';
+  if (tono === 'ok') return 'bg-emerald-100 text-emerald-900 border-emerald-300 shadow-sm';
+  return 'bg-stone-100 text-stone-800 border-stone-300 shadow-sm';
+};
+
+// Siluetas botánicas orgánicas
+const helechoSvg = `<svg class="w-full h-full text-emerald-900/10 pointer-events-none" viewBox="0 0 120 120" fill="currentColor">
+  <path d="M8 112C36 84 70 52 112 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <path transform="translate(24 96) rotate(-105) scale(1.1)" d="M0 0C6-10 18-10 24 0C18 10 6 10 0 0z"/>
+  <path transform="translate(24 96) rotate(-10) scale(1.1)" d="M0 0C6-10 18-10 24 0C18 10 6 10 0 0z"/>
+  <path transform="translate(44 76) rotate(-105) scale(1.1)" d="M0 0C6-10 18-10 24 0C18 10 6 10 0 0z"/>
+  <path transform="translate(44 76) rotate(-10) scale(1.1)" d="M0 0C6-10 18-10 24 0C18 10 6 10 0 0z"/>
+  <path transform="translate(64 56) rotate(-105)" d="M0 0C6-10 18-10 24 0C18 10 6 10 0 0z"/>
+  <path transform="translate(64 56) rotate(-10)" d="M0 0C6-10 18-10 24 0C18 10 6 10 0 0z"/>
+</svg>`;
+---
+
+<Layout title={`${d.nombre} (${d.nombreCientifico}) | Guía de Biodiversidad del Chocó Andino`}>
+  <main class="w-full min-h-screen bg-[var(--cho-cream,#faf6ea)] text-[var(--cho-ink,#1b2a22)] flex flex-col m-0 p-0 selection:bg-emerald-700 selection:text-white relative overflow-x-hidden">
+    
+    {/* Destellos ambientales de luz natural */}
+    <div class="absolute top-10 left-10 w-[420px] h-[420px] bg-emerald-200/40 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute top-[40%] right-5 w-[450px] h-[450px] bg-amber-100/50 rounded-full blur-[140px] pointer-events-none"></div>
+    <div class="absolute bottom-20 left-1/3 w-[500px] h-[500px] bg-emerald-100/40 rounded-full blur-[130px] pointer-events-none"></div>
+
+    {/* Barra Superior Institucional (Consistente con la cabecera del portal) */}
+    <header class="w-full bg-[var(--cho-deep,#14301f)] text-white border-b border-emerald-900/40 py-3.5 px-4 sm:px-6 md:px-12 text-xs flex flex-wrap justify-between items-center gap-3 sticky top-0 z-40 backdrop-blur-md shadow-md">
+      <div class="flex items-center gap-2 sm:gap-3.5">
+        <a 
+          href="/#catalogo" 
+          class="text-emerald-100 hover:text-white transition-all font-bold inline-flex items-center gap-1.5 bg-emerald-900/80 hover:bg-emerald-800 px-3.5 py-1.5 rounded-xl border border-emerald-700/50 shadow-sm"
+        >
+          <svg class="w-3.5 h-3.5 text-[var(--cho-gold,#d4a63a)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" set:html={ic.arrowLeft}></svg>
+          Volver al Catálogo
+        </a>
+        <span class="text-emerald-700 hidden sm:inline">•</span>
+        <span class="text-emerald-300 font-semibold hidden sm:inline">{d.categoria}</span>
+        <span class="text-emerald-700 hidden md:inline">•</span>
+        <span class="text-emerald-100 font-medium truncate max-w-[200px] sm:max-w-xs">{d.nombre}</span>
+      </div>
+
+      <div class="flex items-center gap-3 text-[11px] tracking-wider text-emerald-200 font-bold uppercase">
+        <span class="hidden md:inline text-emerald-300">Reserva de Biosfera UNESCO</span>
+        <span class="w-2 h-2 rounded-full bg-[var(--cho-gold,#d4a63a)] animate-pulse"></span>
+        <span class="text-white">Chocó Andino</span>
+      </div>
+    </header>
+
+    {/* Hero Section de la Ficha: Fotografía Principal y Ficha Resumen */}
+    <section class="w-full bg-gradient-to-b from-[#f2ece0] via-[#eaf2ec] to-[var(--cho-cream,#faf6ea)] border-b border-emerald-900/10 py-10 md:py-16 px-4 sm:px-6 md:px-12 lg:px-16 relative overflow-hidden">
+      
+      {/* Silueta de helecho decorativa de fondo */}
+      <div class="absolute -top-10 -right-10 w-64 md:w-96 h-64 md:h-96 opacity-15 pointer-events-none rotate-45" set:html={helechoSvg}></div>
+      <div class="absolute bottom-0 -left-12 w-60 md:w-80 h-60 md:h-80 opacity-10 pointer-events-none -scale-x-100" set:html={helechoSvg}></div>
+
+      <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10">
+        
+        {/* Columna Izquierda: Fotografía Principal Verificada */}
+        <div class="lg:col-span-5 space-y-4">
+          <div class="relative rounded-[32px] overflow-hidden border-2 border-emerald-900/15 shadow-2xl bg-white group">
+            <img 
+              src={d.imagen} 
+              alt={d.altImagen} 
+              class="w-full h-80 sm:h-96 lg:h-[480px] object-cover object-center group-hover:scale-105 transition-transform duration-700" 
+              loading="eager"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20 pointer-events-none"></div>
+            
+            {/* Badge de Categoría */}
+            <div class="absolute top-4 left-4 flex flex-wrap gap-2">
+              <span class="bg-white/95 backdrop-blur-md text-[var(--cho-deep,#14301f)] text-xs font-black px-4 py-2 rounded-full border border-emerald-200 shadow-md inline-flex items-center gap-2 uppercase tracking-wider">
+                <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={iconoCat(d.categoria)}></svg>
+                {d.categoria}
+              </span>
+            </div>
+
+            {/* Crédito y Nombre Científico Flotante */}
+            <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end text-xs">
+              <div class="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-100 text-zinc-800 max-w-[90%] shadow-lg">
+                <p class="text-[10px] uppercase tracking-widest text-[var(--cho-green,#2e7d52)] font-black flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[var(--cho-green,#2e7d52)]"></span> Fotografía verificada
+                </p>
+                <p class="text-xs font-serif italic text-emerald-950 font-bold truncate">{d.nombreCientifico}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjeta de Estado de Conservación */}
+          <div class="bg-white border border-emerald-200/90 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-md">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-emerald-50 text-[var(--cho-forest,#1e4d36)] flex items-center justify-center shrink-0 border border-emerald-200 shadow-sm">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.shield}></svg>
+              </div>
+              <div>
+                <span class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Estado UICN / Ecuador</span>
+                <span class="text-sm font-black text-[var(--cho-deep,#14301f)]">{d.estadoConservacion}</span>
+              </div>
+            </div>
+            <span class={`text-[11px] font-black px-3.5 py-1.5 rounded-xl border uppercase tracking-wider ${estadoColorBadge(d.estadoTono)}`}>
+              {d.estadoConservacion.split('(')[1]?.replace(')', '') || 'Registrada'}
+            </span>
+          </div>
+        </div>
+
+        {/* Columna Derecha: Encabezado, Resumen y Datos Clave */}
+        <div class="lg:col-span-7 space-y-6">
+          
+          <div class="space-y-2">
+            <div class="inline-flex items-center gap-2 text-xs font-black text-[var(--cho-forest,#1e4d36)] uppercase tracking-widest bg-emerald-100/80 px-3.5 py-1.5 rounded-xl border border-emerald-300/80 shadow-sm">
+              <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.leaf}></svg>
+              Especie de la Reserva del Chocó Andino
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-black text-[var(--cho-deep,#14301f)] leading-tight tracking-tight">
+              {d.nombre}
+            </h1>
+            <p class="font-serif italic text-xl sm:text-2xl text-[var(--cho-green,#2e7d52)] font-semibold">
+              {d.nombreCientifico}
+            </p>
+          </div>
+
+          {/* Introducción general a la especie */}
+          <div class="bg-white/90 p-5 sm:p-6 rounded-2xl border border-emerald-200/90 shadow-md relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 opacity-5 pointer-events-none" set:html={helechoSvg}></div>
+            <p class="text-zinc-700 text-sm sm:text-base leading-relaxed relative z-10 font-normal">
+              {d.descripcion}
+            </p>
+          </div>
+
+          {/* Matriz de Datos Clave (Quick Facts) */}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 pt-1">
+            
+            <div class="bg-white p-4 rounded-2xl border border-emerald-200/80 shadow-sm space-y-1 hover:border-emerald-400 transition-colors">
+              <span class="text-[11px] font-bold text-[var(--cho-forest,#1e4d36)] uppercase tracking-wider flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.mountain}></svg>
+                Rango Altitudinal
+              </span>
+              <p class="text-xs sm:text-sm font-bold text-[var(--cho-ink,#1b2a22)]">{d.rangoAltitudinal}</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-emerald-200/80 shadow-sm space-y-1 hover:border-emerald-400 transition-colors">
+              <span class="text-[11px] font-bold text-[var(--cho-forest,#1e4d36)] uppercase tracking-wider flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.mapPin}></svg>
+                Hábitat Natural
+              </span>
+              <p class="text-xs sm:text-sm font-bold text-[var(--cho-ink,#1b2a22)]">{d.habitat}</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-emerald-200/80 shadow-sm space-y-1 hover:border-emerald-400 transition-colors">
+              <span class="text-[11px] font-bold text-[var(--cho-forest,#1e4d36)] uppercase tracking-wider flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.leaf}></svg>
+                {esFlora ? 'Nutrición / Crecimiento' : 'Alimentación'}
+              </span>
+              <p class="text-xs sm:text-sm font-bold text-[var(--cho-ink,#1b2a22)]">{d.alimentacion}</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-emerald-200/80 shadow-sm space-y-1 hover:border-emerald-400 transition-colors">
+              <span class="text-[11px] font-bold text-[var(--cho-forest,#1e4d36)] uppercase tracking-wider flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.sparkles}></svg>
+                {esFlora ? 'Tamaño / Altura' : 'Tamaño / Peso'}
+              </span>
+              <p class="text-xs sm:text-sm font-bold text-[var(--cho-ink,#1b2a22)]">{d.tamanoPeso}</p>
+            </div>
+
+          </div>
+
+          {/* Botones de Acción */}
+          <div class="pt-2 flex flex-wrap gap-3.5 items-center">
+            <a 
+              href="#guia-completa" 
+              class="bg-[var(--cho-forest,#1e4d36)] hover:bg-[var(--cho-deep,#14301f)] text-white font-black px-6 py-3.5 rounded-2xl text-xs sm:text-sm transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 cursor-pointer"
+            >
+              Explorar Ficha Científica
+              <svg class="w-4 h-4 text-[var(--cho-gold,#d4a63a)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </a>
+            <a 
+              href="#distribucion-potencial" 
+              class="bg-emerald-100 hover:bg-emerald-200 text-[var(--cho-forest,#1e4d36)] font-black px-5 py-3.5 rounded-2xl text-xs sm:text-sm transition-all border border-emerald-300 shadow-sm inline-flex items-center gap-2"
+            >
+              <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.mapPin}></svg>
+              Mapa de Distribución
+            </a>
+            <a 
+              href="/#catalogo" 
+              class="bg-white hover:bg-emerald-50 text-[var(--cho-forest,#1e4d36)] font-bold px-4 py-3.5 rounded-2xl text-xs sm:text-sm transition-all border border-emerald-300 shadow-sm inline-flex items-center gap-2"
+            >
+              Volver al Catálogo
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    {/* Contenedor Principal de la Guía Científica y Pedagógica */}
+    <div id="guia-completa" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-12 w-full relative z-10">
+      
+      {/* SECCIÓN 1: MORFOLOGÍA, CLASIFICACIÓN Y RASGOS DE CAMPO */}
+      <section class="space-y-6">
+        <div class="border-b border-emerald-200 pb-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-2xl bg-[var(--cho-forest,#1e4d36)] text-white flex items-center justify-center font-black text-sm shadow-md">1</span>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-black text-[var(--cho-deep,#14301f)]">Morfología y Clasificación Biológica</h2>
+              <p class="text-xs text-zinc-500 font-medium">Anatomía, identificación visual y taxonomía formal</p>
+            </div>
+          </div>
+          <span class="text-xs font-black text-[var(--cho-green,#2e7d52)] uppercase tracking-wider hidden sm:inline bg-emerald-100/70 px-3 py-1.5 rounded-xl border border-emerald-200">Guía de Campo</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* Descripción Física y Rasgos de Identificación */}
+          <div class="lg:col-span-7 bg-white border border-emerald-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-md relative overflow-hidden">
+            <div>
+              <h3 class="text-sm font-black text-[var(--cho-forest,#1e4d36)] uppercase tracking-wider mb-2 flex items-center gap-2">
+                <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.sparkles}></svg>
+                Características Físicas
+              </h3>
+              <p class="text-zinc-700 text-sm leading-relaxed">
+                {d.caracteristicasFisicas}
+              </p>
+            </div>
+
+            {/* Checklist de Identificación en Campo */}
+            <div class="bg-[#f2f8f4] border border-emerald-200 rounded-2xl p-5 space-y-2.5">
+              <h4 class="text-xs font-black text-[var(--cho-forest,#1e4d36)] uppercase tracking-widest flex items-center gap-2">
+                <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" set:html={ic.check}></svg>
+                Rasgos Clave para Reconocerla en Campo
+              </h4>
+              <p class="text-xs sm:text-sm text-zinc-800 leading-relaxed font-medium">
+                {d.rasgosIdentificacion}
+              </p>
+            </div>
+
+            {/* Campos botánicos si es Flora */}
+            {esFlora && d.caracteristicasBotanicas && (
+              <div class="space-y-4 pt-2 border-t border-emerald-100">
+                <h4 class="text-xs font-black text-[var(--cho-forest,#1e4d36)] uppercase tracking-widest flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.flower}></svg>
+                  Estructura y Órganos Vegetales
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  {d.caracteristicasBotanicas.hojas && (
+                    <div class="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-200/80">
+                      <strong class="text-[var(--cho-forest,#1e4d36)] block mb-1">Hojas / Frondas:</strong>
+                      <span class="text-zinc-700 leading-relaxed">{d.caracteristicasBotanicas.hojas}</span>
+                    </div>
+                  )}
+                  {d.caracteristicasBotanicas.flores && (
+                    <div class="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-200/80">
+                      <strong class="text-[var(--cho-forest,#1e4d36)] block mb-1">Flores / Inflorescencias:</strong>
+                      <span class="text-zinc-700 leading-relaxed">{d.caracteristicasBotanicas.flores}</span>
+                    </div>
+                  )}
+                  {d.caracteristicasBotanicas.frutosSemillas && (
+                    <div class="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-200/80">
+                      <strong class="text-[var(--cho-forest,#1e4d36)] block mb-1">Frutos / Semillas / Esporas:</strong>
+                      <span class="text-zinc-700 leading-relaxed">{d.caracteristicasBotanicas.frutosSemillas}</span>
+                    </div>
+                  )}
+                  {d.caracteristicasBotanicas.troncoRaices && (
+                    <div class="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-200/80">
+                      <strong class="text-[var(--cho-forest,#1e4d36)] block mb-1">Tronco / Tallo / Raíces:</strong>
+                      <span class="text-zinc-700 leading-relaxed">{d.caracteristicasBotanicas.troncoRaices}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Cuadro Taxonómico Riguroso */}
+          <div class="lg:col-span-5 bg-white border border-emerald-200 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-md space-y-6">
+            <div>
+              <h3 class="text-sm font-black text-[var(--cho-forest,#1e4d36)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.book}></svg>
+                Clasificación Taxonómica
+              </h3>
+
+              <div class="divide-y divide-emerald-100 text-xs sm:text-sm">
+                <div class="py-2.5 flex justify-between items-center">
+                  <span class="text-zinc-500 font-medium">Reino:</span>
+                  <span class="font-bold text-[var(--cho-deep,#14301f)]">{d.clasificacion.reino}</span>
+                </div>
+                <div class="py-2.5 flex justify-between items-center">
+                  <span class="text-zinc-500 font-medium">{esFlora ? 'División / Filo:' : 'Filo:'}</span>
+                  <span class="font-bold text-[var(--cho-deep,#14301f)]">{d.clasificacion.filo}</span>
+                </div>
+                <div class="py-2.5 flex justify-between items-center">
+                  <span class="text-zinc-500 font-medium">Clase:</span>
+                  <span class="font-bold text-[var(--cho-deep,#14301f)]">{d.clasificacion.clase}</span>
+                </div>
+                <div class="py-2.5 flex justify-between items-center">
+                  <span class="text-zinc-500 font-medium">Orden:</span>
+                  <span class="font-bold text-[var(--cho-deep,#14301f)]">{d.clasificacion.orden}</span>
+                </div>
+                <div class="py-2.5 flex justify-between items-center">
+                  <span class="text-zinc-500 font-medium">Familia:</span>
+                  <span class="font-bold text-[var(--cho-green,#2e7d52)]">{d.clasificacion.familia}</span>
+                </div>
+                <div class="py-2.5 flex justify-between items-center">
+                  <span class="text-zinc-500 font-medium">Género:</span>
+                  <span class="font-bold text-[var(--cho-deep,#14301f)] italic">{d.clasificacion.genero}</span>
+                </div>
+                <div class="py-2.5 flex justify-between items-center">
+                  <span class="text-zinc-500 font-medium">Especie:</span>
+                  <span class="font-bold text-[var(--cho-forest,#1e4d36)] italic">{d.nombreCientifico}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-[#f0f7f2] p-4 rounded-2xl border border-emerald-200 text-xs text-emerald-950 leading-relaxed shadow-inner">
+              <span class="font-bold text-[var(--cho-forest,#1e4d36)] block mb-1 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.check}></svg>
+                Registro de Biodiversidad:
+              </span>
+              Especie validada y catalogada dentro del inventario de biodiversidad de la Mancomunidad del Chocó Andino de Pichincha, Ecuador.
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* SECCIÓN 2: ECOLOGÍA, HÁBITAT Y CICLO DE VIDA */}
+      <section class="space-y-6">
+        <div class="border-b border-emerald-200 pb-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-2xl bg-[var(--cho-forest,#1e4d36)] text-white flex items-center justify-center font-black text-sm shadow-md">2</span>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-black text-[var(--cho-deep,#14301f)]">Ecología, Hábitat y Comportamiento</h2>
+              <p class="text-xs text-zinc-500 font-medium">Dinámica cotidiana, distribución y ciclo de vida en el bosque nublado</p>
+            </div>
+          </div>
+          <span class="text-xs font-black text-[var(--cho-green,#2e7d52)] uppercase tracking-wider hidden sm:inline bg-emerald-100/70 px-3 py-1.5 rounded-xl border border-emerald-200">Vida en la Reserva</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          {/* Tarjeta 1: Distribución en el Chocó Andino */}
+          <div class="bg-white border border-emerald-200 rounded-3xl p-6 space-y-3.5 shadow-md flex flex-col justify-between">
+            <div class="space-y-3">
+              <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-[var(--cho-forest,#1e4d36)] flex items-center justify-center border border-emerald-200 shadow-sm">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.mapPin}></svg>
+              </div>
+              <h3 class="text-base font-black text-[var(--cho-deep,#14301f)]">Distribución en Pichincha</h3>
+              <p class="text-[11px] text-[var(--cho-green,#2e7d52)] font-black uppercase tracking-wider">Parroquias y Reservas Locales</p>
+              <p class="text-xs sm:text-sm text-zinc-700 leading-relaxed">
+                {d.distribucionGeografica}
+              </p>
+            </div>
+          </div>
+
+          {/* Tarjeta 2: Hábitos y Comportamiento / Condiciones */}
+          <div class="bg-white border border-emerald-200 rounded-3xl p-6 space-y-3.5 shadow-md flex flex-col justify-between">
+            <div class="space-y-3">
+              <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-[var(--cho-forest,#1e4d36)] flex items-center justify-center border border-emerald-200 shadow-sm">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.sparkles}></svg>
+              </div>
+              <h3 class="text-base font-black text-[var(--cho-deep,#14301f)]">{esFlora ? 'Condiciones de Crecimiento' : 'Comportamiento y Hábitos'}</h3>
+              <p class="text-[11px] text-[var(--cho-green,#2e7d52)] font-black uppercase tracking-wider">{esFlora ? 'Microclima de niebla' : 'Dinámica Diurna / Nocturna'}</p>
+              <p class="text-xs sm:text-sm text-zinc-700 leading-relaxed">
+                {esFlora ? d.condicionesCrecimiento : d.comportamientoHabitos}
+              </p>
+            </div>
+          </div>
+
+          {/* Tarjeta 3: Reproducción y Ciclo de Vida */}
+          <div class="bg-white border border-emerald-200 rounded-3xl p-6 space-y-3.5 shadow-md md:col-span-2 lg:col-span-1 flex flex-col justify-between">
+            <div class="space-y-3">
+              <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-[var(--cho-forest,#1e4d36)] flex items-center justify-center border border-emerald-200 shadow-sm">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.leaf}></svg>
+              </div>
+              <h3 class="text-base font-black text-[var(--cho-deep,#14301f)]">Reproducción y Ciclo Vital</h3>
+              <p class="text-[11px] text-[var(--cho-green,#2e7d52)] font-black uppercase tracking-wider">{esFlora ? 'Polinización y semillas' : 'Crianza y continuidad'}</p>
+              <p class="text-xs sm:text-sm text-zinc-700 leading-relaxed">
+                {d.reproduccionCiclo}
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Relación con otros organismos si es Flora */}
+        {esFlora && d.relacionOrganismos && (
+          <div class="bg-gradient-to-r from-[#eaf4ed] to-[#edf7f0] border border-emerald-200/90 rounded-3xl p-6 sm:p-8 space-y-2 shadow-md">
+            <h3 class="text-xs font-black text-[var(--cho-forest,#1e4d36)] uppercase tracking-widest flex items-center gap-2">
+              <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.tree}></svg>
+              Relación con otros organismos del bosque nublado
+            </h3>
+            <p class="text-zinc-800 text-sm sm:text-base leading-relaxed">
+              {d.relacionOrganismos}
+            </p>
+          </div>
+        )}
+      </section>
+
+      {/* SECCIÓN 3: DISTRIBUCIÓN POTENCIAL Y REGISTROS DE PRESENCIA */}
+      <section id="distribucion-potencial" class="space-y-6">
+        <div class="border-b border-emerald-200 pb-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-2xl bg-[var(--cho-forest,#1e4d36)] text-white flex items-center justify-center font-black text-sm shadow-md">3</span>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-black text-[var(--cho-deep,#14301f)]">Distribución Potencial y Registros de Presencia</h2>
+              <p class="text-xs text-zinc-500 font-medium">Zonas de idoneidad ambiental bioclimática y observaciones confirmadas en Ecuador</p>
+            </div>
+          </div>
+          <span class="text-xs font-black text-[var(--cho-green,#2e7d52)] uppercase tracking-wider hidden sm:inline bg-emerald-100/70 px-3 py-1.5 rounded-xl border border-emerald-200">Mapa Cartográfico Interactivo</span>
+        </div>
+
+        <MapaDistribucion
+          distribucion={d.distribucionPotencial}
+          nombreComun={d.nombre}
+          nombreCientifico={d.nombreCientifico}
+          categoria={d.categoria}
+          slug={especie.id}
+          rangoAltitudinal={d.rangoAltitudinal}
+          habitat={d.habitat}
+          distribucionGeografica={d.distribucionGeografica}
+        />
+      </section>
+
+      {/* SECCIÓN 4: IMPORTANCIA PARA EL CHOCÓ ANDINO Y FUNCIÓN ECOLÓGICA */}
+      <section class="space-y-6">
+        <div class="border-b border-emerald-200 pb-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-2xl bg-[var(--cho-forest,#1e4d36)] text-white flex items-center justify-center font-black text-sm shadow-md">4</span>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-black text-[var(--cho-deep,#14301f)]">Rol Ecológico e Importancia para la Reserva</h2>
+              <p class="text-xs text-zinc-500 font-medium">Servicios ambientales, interconexión de cuencas y equilibrio biológico</p>
+            </div>
+          </div>
+          <span class="text-xs font-black text-[var(--cho-green,#2e7d52)] uppercase tracking-wider hidden sm:inline bg-emerald-100/70 px-3 py-1.5 rounded-xl border border-emerald-200">Equilibrio Natural</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <div class="bg-white border border-emerald-200 rounded-3xl p-6 sm:p-8 space-y-3.5 shadow-md">
+            <div class="flex items-center gap-2 text-[var(--cho-forest,#1e4d36)] font-black text-xs uppercase tracking-widest">
+              <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.sparkles}></svg>
+              Función Ecológica Primaria
+            </div>
+            <h3 class="text-lg font-black text-[var(--cho-deep,#14301f)]">Servicios Ecosistémicos</h3>
+            <p class="text-zinc-700 text-sm leading-relaxed">
+              {d.funcionEcologica}
+            </p>
+          </div>
+
+          <div class="bg-white border border-emerald-200 rounded-3xl p-6 sm:p-8 space-y-3.5 shadow-md">
+            <div class="flex items-center gap-2 text-amber-800 font-black text-xs uppercase tracking-widest">
+              <svg class="w-4 h-4 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.shield}></svg>
+              Valor para el Chocó Andino
+            </div>
+            <h3 class="text-lg font-black text-[var(--cho-deep,#14301f)]">Identidad y Conservación Regional</h3>
+            <p class="text-zinc-700 text-sm leading-relaxed">
+              {d.importanciaChocoAndino}
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      {/* SECCIÓN 5: AMENAZAS Y MEDIDAS DE CONSERVACIÓN */}
+      <section class="bg-gradient-to-br from-[#fcf7ee] via-[#f7f2e4] to-[#eef6f0] border border-amber-300/80 rounded-3xl p-6 sm:p-10 space-y-8 shadow-xl relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-64 h-64 opacity-10 pointer-events-none" set:html={helechoSvg}></div>
+
+        <div class="border-b border-amber-900/15 pb-4 flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <span class="text-amber-900 font-black text-xs uppercase tracking-widest block flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-600"></span>
+              Protegiendo nuestro patrimonio natural
+            </span>
+            <h2 class="text-xl sm:text-3xl font-black text-[var(--cho-deep,#14301f)]">Amenazas y Acciones de Protección</h2>
+          </div>
+          <div class="inline-flex items-center gap-2 bg-white border border-amber-300 px-4 py-2 rounded-full text-xs font-black text-amber-950 shadow-sm">
+            <svg class="w-4 h-4 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.shield}></svg>
+            Estado: {d.estadoConservacion}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+          
+          <div class="space-y-3">
+            <h3 class="text-sm font-black text-rose-950 uppercase tracking-wider flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>
+              Principales Amenazas en la Región
+            </h3>
+            <p class="text-zinc-800 text-sm leading-relaxed bg-white/90 p-5 rounded-2xl border border-rose-200/80 shadow-sm">
+              {d.amenazasPrincipales}
+            </p>
+          </div>
+
+          <div class="space-y-3">
+            <h3 class="text-sm font-black text-[var(--cho-forest,#1e4d36)] uppercase tracking-wider flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[var(--cho-green,#2e7d52)]"></span>
+              Medidas y Acciones de Protección
+            </h3>
+            <p class="text-zinc-800 text-sm leading-relaxed bg-white/90 p-5 rounded-2xl border border-emerald-200/80 shadow-sm">
+              {d.medidasProteccion}
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      {/* SECCIÓN 6: DATOS CURIOSOS Y FASCINANTES */}
+      {d.datosCuriosos && d.datosCuriosos.length > 0 && (
+        <section class="space-y-6">
+          <div class="border-b border-emerald-200 pb-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center font-black text-sm border border-amber-300 shadow-sm">✦</span>
+              <div>
+                <h2 class="text-xl sm:text-2xl font-black text-[var(--cho-deep,#14301f)]">¿Sabías que...? Datos Curiosos</h2>
+                <p class="text-xs text-zinc-500 font-medium">Adaptaciones asombrosas y singularidades de la especie</p>
+              </div>
+            </div>
+            <span class="text-xs font-black text-amber-800 uppercase tracking-wider hidden sm:inline bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">Adaptaciones Asombrosas</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {d.datosCuriosos.map((dato, i) => (
+              <div class="bg-white border border-emerald-200 rounded-3xl p-6 relative overflow-hidden shadow-md flex flex-col justify-between hover:border-[var(--cho-gold,#d4a63a)] transition-colors">
+                <span class="text-4xl font-black text-emerald-100 absolute top-3 right-4 select-none">#{i + 1}</span>
+                <p class="text-sm text-zinc-800 leading-relaxed relative z-10 pt-2 font-medium">
+                  {dato}
+                </p>
+                <div class="mt-4 pt-3 border-t border-emerald-100 flex items-center gap-1.5 text-xs text-[var(--cho-forest,#1e4d36)] font-bold">
+                  <svg class="w-3.5 h-3.5 text-[var(--cho-gold,#d4a63a)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.sparkles}></svg>
+                  Curiosidad biológica
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* SECCIÓN 7: FUENTES BIBLIOGRÁFICAS Y ENLACES DE CONSULTA */}
+      <section class="bg-white border border-emerald-200 rounded-3xl p-6 sm:p-8 space-y-4 shadow-md">
+        <h3 class="text-xs font-black text-[var(--cho-forest,#1e4d36)] uppercase tracking-widest flex items-center gap-2">
+          <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.book}></svg>
+          Fuentes Bibliográficas y Enlaces de Consulta
+        </h3>
+        
+        <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs text-zinc-700">
+          {d.fuentes.map((fuente) => (
+            <li class="bg-stone-50/80 p-3.5 rounded-xl border border-emerald-200/70 flex items-center justify-between gap-2">
+              <span class="truncate font-medium">{fuente.titulo}</span>
+              {fuente.enlace && (
+                <a 
+                  href={fuente.enlace} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  class="text-[var(--cho-forest,#1e4d36)] hover:text-[var(--cho-green,#2e7d52)] font-black shrink-0 underline"
+                >
+                  Consultar &rarr;
+                </a>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Barra de Navegación entre Fichas y Regreso */}
+      <footer class="pt-8 border-t border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        
+        <a 
+          href={`/especies/${prevEspecie.id}`} 
+          class="w-full sm:w-auto bg-white hover:bg-emerald-50 text-[var(--cho-ink,#1b2a22)] hover:text-[var(--cho-forest,#1e4d36)] px-5 py-3 rounded-2xl border border-emerald-200 text-xs font-bold transition-all flex items-center justify-center sm:justify-start gap-2 shadow-sm"
+        >
+          <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.arrowLeft}></svg>
+          <div class="text-left">
+            <span class="text-[10px] text-zinc-500 block uppercase font-bold">Anterior</span>
+            <span class="truncate max-w-[150px] inline-block font-black">{prevEspecie.data.nombre}</span>
+          </div>
+        </a>
+
+        <a 
+          href="/#catalogo" 
+          class="w-full sm:w-auto bg-[var(--cho-forest,#1e4d36)] hover:bg-[var(--cho-deep,#14301f)] text-white font-black px-8 py-3.5 rounded-2xl text-xs sm:text-sm transition-all shadow-md text-center"
+        >
+          Volver al Catálogo del Chocó Andino
+        </a>
+
+        <a 
+          href={`/especies/${nextEspecie.id}`} 
+          class="w-full sm:w-auto bg-white hover:bg-emerald-50 text-[var(--cho-ink,#1b2a22)] hover:text-[var(--cho-forest,#1e4d36)] px-5 py-3 rounded-2xl border border-emerald-200 text-xs font-bold transition-all flex items-center justify-center sm:justify-end gap-2 shadow-sm text-right"
+        >
+          <div class="text-right">
+            <span class="text-[10px] text-zinc-500 block uppercase font-bold">Siguiente</span>
+            <span class="truncate max-w-[150px] inline-block font-black">{nextEspecie.data.nombre}</span>
+          </div>
+          <svg class="w-4 h-4 text-[var(--cho-green,#2e7d52)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ic.arrowRight}></svg>
+        </a>
+
+      </footer>
+
+    </div>
+
+  </main>
+</Layout>
